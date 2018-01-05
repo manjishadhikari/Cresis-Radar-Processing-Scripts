@@ -8,7 +8,7 @@ close
 clc
 dbstop error
 
-plots =1;
+plots =0;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
 lon_G_r_corrected = [];
@@ -31,11 +31,11 @@ for M =1:40
   param.radar.fs = 195000000;
   if M<21
     cross_lines = 1;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar/crossline',num2str(M)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline',num2str(M)]);
   else
     M1=M-20;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -104,7 +104,7 @@ for M =1:40
     %         for l = 501:250:length(Greenland.ice_surface_power)
     %             if ((l > 500) && ((l+500) < length(Greenland.ice_surface_power)))
     num_int=600;  % ~210 metres
-    repeat_after=100;
+    repeat_after=300;
     
     for l = num_int/2:repeat_after:length(Greenland.ice_surface_power)
       if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_surface_power)))

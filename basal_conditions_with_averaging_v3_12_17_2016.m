@@ -10,7 +10,7 @@ if 1
     load(out_fn);
 end
 physical_constants
-plots =1;
+plots =0;
 
 clear idx
  idx = find(isnan(Greenland.ice_bed_power)) ;
@@ -36,7 +36,7 @@ clear idx
 
 Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
 Greenland.surface_height = (Greenland.surface_time)*c/2;
- figure;plot(tmp.Greenland.depth,lp(tmp.Greenland.ice_bed_power_cgl))
+% figure;plot(tmp.Greenland.depth,lp(tmp.Greenland.ice_bed_power_cgl))
 
 if plots
     plot(Greenland.depth, lp((Greenland.ice_bed_power)));
@@ -83,7 +83,7 @@ Greenland.GPS_time(idx) = [];
 Greenland.Latitude(idx) = [];
 Greenland.Longitude(idx) = [];
 Greenland.Elevation(idx) = [];
-Greenland.ice_bed_time(idx) = []; figure;plot(tmp.Greenland.depth,lp(tmp.Greenland.ice_bed_power_cgl))
+Greenland.ice_bed_time(idx) = []; %figure;plot(tmp.Greenland.depth,lp(tmp.Greenland.ice_bed_power_cgl))
 Greenland.surface_time(idx) = [];
 Greenland.ice_bed_power_cgl_sorted(idx) = [];
 Greenland.depth_sorted (idx)= [];
