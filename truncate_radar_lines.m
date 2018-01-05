@@ -1,13 +1,12 @@
 
+line_no=10;
 close all
-load('Y:\manjish\peterman\radar_w_index1\verticalline8.mat')
+load([sprintf('Y:\\manjish\\peterman\\radar_w_index1\\verticalline%03d.mat',line_no)])
 
 
-
-
-max_length=length(Greenland.Latitude)
-start_idx=5000;
-stop_idx=280000;
+lm=length(Greenland.Latitude)
+start_idx=1;
+stop_idx=420000;
 
 Greenland.segments_length(1)=Greenland.segments_length(1)-start_idx+1;
 Greenland.segments_length(end)=Greenland.segments_length(end)-length(Greenland.Latitude)-stop_idx;
@@ -41,6 +40,7 @@ xlabel('Latitude(deg)');
 ylabel('Longitude(deg)');
 hold on;
 scatter(gps.x,gps.y,20,lp(Greenland.ice_bed_power),'fill')
+scatter(gps.x(1),gps.y(1),200,'X');
 colorbar
 %     if length(bt.coherenceindex.value) >1
 %         caxis([min(bt.coherenceindex.value),max(bt.coherenceindex.value)]);
@@ -51,7 +51,8 @@ figure;plot(lp(Greenland.ice_bed_power));
 range(lp(Greenland.ice_bed_power))
 
 Greenland.truncated.bins=[start_idx stop_idx];
-Greenland.truncated.original_length=max_length;
+Greenland.truncated.original_length=lm;
+keyboard
 if 1
-  save('Y:\manjish\peterman\radar_w_index1\verticalline8.mat','Greenland');
+  save([sprintf('Y:\\manjish\\peterman\\radar_w_index1\\verticalline%03d.mat',line_no)]);
 end

@@ -62,7 +62,7 @@ for line_idx = 1:length(param.lines)
     if strcmp(param.sched.type,'custom_torque')
       create_task_param.conforming = true;
       ctrl = torque_create_task(ctrl,fh,1,arg,create_task_param);
-       fprintf('%d. Job id: %d Line number %d \n',line_idx,ctrl.job_id_list(line_idx), task_param.proc_line);
+       fprintf('Matlab job id: %d. Torque Job id: %d. Processing Line number %d \n',line_idx,ctrl.job_id_list(line_idx), task_param.proc_line);
       
     elseif ~strcmp(param.sched.type,'no scheduler')
       [ctrl,job_id,task_id] = create_task(ctrl,fh,1,arg);

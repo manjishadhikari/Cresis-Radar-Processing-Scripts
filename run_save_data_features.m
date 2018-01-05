@@ -3,7 +3,7 @@
 
 param_override = [];
 param_override.sched.type='custom_torque';
- param_override.sched.type = 'no scheduler';
+ %param_override.sched.type = 'no scheduler';
 %param_override.sched.cluster_size = Inf;
 param_override.sched.rerun_only = false;
 param_override.sched.submit_arguments    = '-q mem -l nodes=1:ppn=1,walltime=00:30:00';
@@ -17,7 +17,7 @@ end
 
 %=======ENTER LINE NUMBER TO PROCESS=============
 param_override.cross_lines_en=0;  %1 for cross line 1 for verticallines 0
-param_override.lines=[8];    %[1:15]
+param_override.lines=[1];    %[1:15]
 
 %==================================================
 

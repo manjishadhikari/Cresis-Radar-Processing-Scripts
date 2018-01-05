@@ -168,7 +168,7 @@ end
     layer_fn = fullfile(layer_dir,sprintf('Data_%s_%03d.mat', param1.day_seg, frm));
     fprintf('Loading data %s\n', layer_fn);
     data_fn = fullfile(data_dir,sprintf('Data_%s_%03d.mat', param1.day_seg, frm));
-    
+   
     % Load the file
     data = load(data_fn);
     tmp = load(layer_fn);
@@ -215,25 +215,10 @@ end
     clear index
             index = round((bottom_twtt-data.Time(1))/dt);
             ice_bed_power  = zeros(1,length(data.Surface));
-            bottom_twtt_n = zeros(1,length(data.Surface));
-            
+
             for i = 1:length(bottom_twtt)
-                if isnan(bottom_twtt(i)) || isinf(bottom_twtt(i))
-                    bottom_twtt_n(i)= nan;
-                    continue
-                else
-                    [bed_power idx] = max(lp(data.Data(index(i)-1:index(i)+1,i)));
-                    bed_index = idx + index(i)+1-1;
-                    bottom_twtt_n(i) =  interp1([1:length(data.Time)],data.Time,bed_index);
-                end
-            end
-            filter_length = 100;
-            bottom_twtt_n = sgolayfilt(bottom_twtt_n, 2,filter_length+1, hanning(filter_length+1));
-            
-            index = round((bottom_twtt_n-data.Time(1))/dt);
-            for i = 1:length(bottom_twtt_n)
                 
-                if isnan(bottom_twtt_n(i)) || isinf(bottom_twtt_n(i))
+                if isnan(bottom_twtt(i)) || isinf(bottom_twtt(i))
                     ice_bed_power(i)= nan;
                     continue
                 else
@@ -245,10 +230,12 @@ end
                       idx2=size(data.Data,1);
                       idx1=idx2-300;
                     end
-                    N = mean(sqrt(data.Data(idx1:idx2,i)));
-                    SNR = 10*log10((sqrt(bed_power))/N);
+                    N = mean((data.Data(idx1:idx2,i)));  %Noise floor
+                 
+                    SNR=bed_power-lp(N);
                     if SNR > 3
                         ice_bed_power(i) = data.Data(bed_index,i);
+                        bottom_twtt(i) =  interp1([1:length(data.Time)],data.Time,bed_index);
                         %
                     else
                         ice_bed_power(i) = nan;
@@ -258,40 +245,7 @@ end
                 end
             end
       
-    
-%     clear ice_bed_echo
-%     if cross_lines
-%       load(['/cresis/snfs1/scratch/manjish/test/',sprintf('Data_%s_%03d.mat', param.day_seg, frm)]);
-%     else
-%       load(['/cresis/snfs1/scratch/manjish/test/',sprintf('Data_%s_%03d.mat', param.day_seg, frm)]);
-%     end
-%     if exist('bottom_twtt_n','var')
-%       bottom_twtt = bottom_twtt_n;
-%     end
-%     
-%     clear index
-%     index = round((bottom_twtt-data.Time(1))/dt);
-%     ice_bed_power  = zeros(1,length(data.Surface));
-%  
-%     
-%     
-%     
-%     for i = 1:length(bottom_twtt)
-%       if isnan(bottom_twtt(i)) || isinf(bottom_twtt(i))
-%         ice_bed_power(i)= nan;
-%      
-%      
-%         continue
-%       else
-%         [bed_power idx] =  max(lp(data.Data(index(i)-1:index(i)+1,i)));
-%         bed_index = idx + index(i)-1-1;
-%         ice_bed_power(i)=data.Data(bed_index);
-%         
-%       end
-%       
-%     end
-%     
-    
+
     
     if any(ice_bed_power ==0 )
       keyboard
@@ -300,7 +254,7 @@ end
     if debug_flag
       figure(2);imagesc([],data.Time*1e6,lp(data.Data));
       figure(2);hold on; plot(surface_twtt*1e6);title('After sf bins');
-      figure(2);hold on; plot(bottom_twtt_n*1e6);title('After sf bins');
+      figure(2);hold on; plot(bottom_twtt*1e6);title('After sf bins');
       title(sprintf('Data_%s_%03d.mat', param1.day_seg, frm))
     end
     
@@ -310,9 +264,10 @@ end
     warning('Save figures enabled.. Set it to 0 if not necessary')
     if save_fig_en
       if debug_flag==0
+        figure(2);close 
         figure(2);imagesc([],data.Time*1e6,lp(data.Data));
         figure(2);hold on; plot(surface_twtt*1e6);title('After sf bins');
-        figure(2);hold on; plot(bottom_twtt_n*1e6);title('After sf bins');
+        figure(2);hold on; plot(bottom_twtt*1e6);title('After sf bins');
         title(sprintf('Data_%s_%03d.mat', param1.day_seg, frm))
       end
       
@@ -336,7 +291,7 @@ end
       end
     end
      
-    
+    if 0
     %Coherence Index and Abruptive Index Calculation
     % fc= 195e6;  %radar center frequemcy
     fc=(param1.radar.wfs(1).f0+param1.radar.wfs(1).f1)/2;
@@ -958,12 +913,13 @@ end
     if ~(length(Greenland.ice_bed_time) ==length(Greenland.ice_bed_power))
       keyboard
     end
+    end
   end
   
   % keyboard
+  if 0
   
-  
-   if 1
+   if 0
       geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
       proj = geotiffinfo(geotiff_fn);
       %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
@@ -1033,6 +989,7 @@ end
 %     save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
 %   end
  
+  end
 end
 success=true;
 
