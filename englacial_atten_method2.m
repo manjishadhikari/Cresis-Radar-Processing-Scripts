@@ -4,11 +4,12 @@
 
 %% setup
 clear
-close
+close all
 clc
 dbstop error
 
 plots =0;
+coh_int=100;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
 lon_G_r_corrected = [];
@@ -22,10 +23,10 @@ variable_attenuation=[];
 
 
 %%
-
-for M =1:40
+disp('Englacial Attn Method 2')
+for M =21:40
   
-  clearvars -except M plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
+  clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
   clc
   
   param.radar.fs = 195000000;
@@ -35,7 +36,7 @@ for M =1:40
   else
     M1=M-20;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index_flipped/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -83,6 +84,51 @@ for M =1:40
     close
     
   end
+  
+  
+  %Coherent Integration to increase SNR 
+  
+   %% COHERENT INTEGRATIONS
+  if coh_int~=0 
+    
+    
+    Nx=floor(length(Greenland.ice_bed_power)/coh_int);
+    %        ice_surface_power_tmp=nan*ones(1,Nx);
+    %        Latitude=nan*ones(1,Nx);
+    %        Longitude=nan*ones(1,Nx);
+    %        Elevation=nan*ones(1,Nx);
+    %        surface_twtt_tmp=nan*ones(1,Nx);
+    
+    for i= 1:Nx
+      idx1=(i-1)*coh_int+1;
+      idx2=i*coh_int;
+      if idx2>length(Greenland.GPS_time) & length(Greenland.GPS_time)-idx1>coh_int/2
+        idx2=length(Greenland.GPS_time);
+      elseif idx2>length(Greenland.GPS_time)& length(Greenland.GPS_time)-idx1<coh_int/2
+        continue;
+      end
+      Greenland.GPS_time(i)=mean(Greenland.GPS_time(idx1:idx2));
+      Greenland.Latitude(i)=mean(Greenland.Latitude(idx1:idx2));
+      Greenland.Longitude(i)=mean(Greenland.Longitude(idx1:idx2));
+      Greenland.Elevation(i)=mean(Greenland.Elevation(idx1:idx2));
+      Greenland.surface_time(i)=mean(Greenland.surface_time(idx1:idx2));
+       Greenland.ice_bed_time(i)=mean(Greenland.ice_bed_time(idx1:idx2));
+        Greenland.ice_bed_power(i)=mean(Greenland.ice_bed_power(idx1:idx2));
+         Greenland.ice_surface_power(i)=mean(Greenland.ice_surface_power(idx1:idx2));
+    
+     
+    end
+   % Greenland.Time=Greenland.Time;
+      Greenland.segments_length=round((Greenland.segments_length)/coh_int);
+  end
+  
+  
+  
+  
+  
+  
+  
+  
   %% compensating reflected bed power for surface roughness
   file_exist = false;
   if M<21
@@ -297,7 +343,7 @@ for M =1:40
         keyboard
       end
     end
-    
+    disp('Saving surface roughness values')
     if cross_lines
       save(['/cresis/snfs1/scratch/manjish/surface_roughness/cross_lines' num2str(M,'%03d') '.mat'],'r');
     else
@@ -342,7 +388,7 @@ for M =1:40
     repeat_after=300;
     for l = num_int/2:repeat_after:length(Greenland.ice_bed_power)
       if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_bed_power)))
-        if k>size(r.lat)
+        if k>size(r.lat) 
           continue
         end
         if isnan(r.rms_height(k)) || isnan(Greenland.ice_bed_power_avg(k))
@@ -361,7 +407,7 @@ for M =1:40
     
     clearvars r k
   else
-    
+     
     %         K  = floor(length(Greenland.ice_bed_power)/1000);
     k = 1;
     for l = 501:250:length(Greenland.ice_bed_power)
@@ -375,7 +421,7 @@ for M =1:40
           r.dielectric_constant(k) = nan;
           r.pn(k) = nan;
           r.pc(k) = nan ;
-          k = k+1;
+          k = k+1; 
           continue
         else
           s(id) = [];
@@ -390,7 +436,7 @@ for M =1:40
           r.pn(k) = nan;
           r.pc(k) = nan ;
           k = k+1;
-          continue
+          continue 
         end
         
         % phat = mle(double(abs(s)),'distribution','Rician');
@@ -404,7 +450,7 @@ for M =1:40
         % pn = 10*log10(2*pd.sigma^2);
         S = pd.sigma;
         r.pc(k) = a^2;
-        r.pn(k) = 2*2*pd.sigma^2;
+        r.pn(k) = 2*2*pd.sigma^2; 
         rms_fit = (r.pc(k)/r.pn(k))*4*(2*pi/(c/param.radar.fs))^2;
         
         r.rms_height(k) = 0.0001;
@@ -416,7 +462,7 @@ for M =1:40
             warning('check this')
             %                         keyboard
             break
-          else
+          else 
             
             if i>1
               if MSE(i-1) < MSE(i)
@@ -432,7 +478,7 @@ for M =1:40
         end
         
         
-        if isnan(r.rms_height(k))
+        if isnan(r.rms_height(k)) 
           r.dielectric_constant(k) = nan;
         else
           r.dielectric_constant(k) = 1;
@@ -503,7 +549,7 @@ for M =1:40
       end
     end
     
-    
+    disp('Saving bedroughness values')
     if cross_lines
       save(['/cresis/snfs1/scratch/manjish/cross_lines' num2str(M,'%03d') '.mat'],'r');
     else
@@ -538,7 +584,7 @@ for M =1:40
     keyboard
   end
   
-  Greenland.ice_bed_power_cgl =lp(Greenland.ice_bed_power_avg)-lp(Greenland.geometric_loss_avg);
+  Greenland.ice_bed_power_cgl =lp(Greenland.ice_bed_power_avg)+lp(Greenland.geometric_loss_avg);
   if plots
     figure(4);subplot(2,1,1);plot(Greenland.ice_bed_power_cgl);title('Bed power after Geom corr')
     subplot(2,1,2);plot(lp(Greenland.geometric_loss_avg)); title('Geom correction')
@@ -674,11 +720,10 @@ for M =1:40
   estimated_DN=cat(2,estimated_DN,estimated_dn);
   variable_attenuation=cat(2,variable_attenuation,var_attenuation);
   
+  close all
   %%
-  % along_track = geodetic_to_along_track(Greenland.Latitude_avg,Greenland.Longitude_avg);
-  %
-  % along_track = along_track/1000;
-  % plot( modified_atteanuation+ 0.02*(along_track-median(along_track)))
+  %ref=Greenland.ice_bed_power_cgl-mean(Greenland.ice_bed_power_cgl)+const_attenuation;
+  %ref2=Greenland.ice_bed_power_cgl-mean(Greenland.ice_bed_power_cgl)+var_attenuation;
 end
 %%
 depth_G_r_corrected = depth_G_r_corrected / 1000;

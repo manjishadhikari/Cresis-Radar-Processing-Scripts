@@ -58,11 +58,15 @@ for line_idx = 1:length(param.lines)
     fh = @save_data_features_task;
    
     arg{1} = task_param;
+   
     
     if strcmp(param.sched.type,'custom_torque')
+      if line_idx==1
+        fprintf('Running batch jobs.. Batch %d with cross_lines_en= %d \n', ctrl.batch_id,task_param.cross_lines_en)
+      end
       create_task_param.conforming = true;
       ctrl = torque_create_task(ctrl,fh,1,arg,create_task_param);
-       fprintf('Matlab job id: %d. Torque Job id: %d. Processing Line number %d \n',line_idx,ctrl.job_id_list(line_idx), task_param.proc_line);
+       fprintf(' sub %d/%d:  Matlab job id: %d. Torque Job id: %d. Processing Line number %d \n',ctrl.batch_id,ctrl.job_id_list(line_idx),line_idx,ctrl.job_id_list(line_idx), task_param.proc_line);
       
     elseif ~strcmp(param.sched.type,'no scheduler')
       [ctrl,job_id,task_id] = create_task(ctrl,fh,1,arg);

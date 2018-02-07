@@ -25,8 +25,9 @@ Greenland.ice_bed_power_cgl = [];
   Greenland.index.Padj=[];
     Greenland.index.Padj_Na11=[];
     lst=[];
-
-for M =1:40
+fprintf('Combining all radar lines..')
+    
+for M =21:40
   if M<21
    tmp=load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline', sprintf('%d.mat',M)]);
   else
@@ -117,7 +118,7 @@ for M =1:40
   end
   
 end
-out_fn=['/cresis/snfs1/scratch/manjish/peterman/', sprintf('completedata_w_idx.mat')];
+out_fn=['/cresis/snfs1/scratch/manjish/peterman/', sprintf('verticalline_w_idx.mat')];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);

@@ -4,8 +4,9 @@ function [index]=indices_calculation(data_fn,surface_twtt,bottom_twtt,fc,fs,p,de
 
 %% Determination of coherence Index and abruptive index
 
-if 1
+if 0
   warning('Test Running ')
+  keyboard
   A=load('/cresis/snfs1/dataproducts/ct_data/rds/2011_Greenland_P3/CSARP_manjish/20110507_02/Data_20110507_02_017.mat');
   layer=load('/cresis/snfs1/dataproducts/ct_data/rds/2011_Greenland_P3/CSARP_layerData/20110507_02/Data_20110507_02_017.mat');
    surface_twtt=interp1(layer.GPS_time,layer.layerData{1}.value{2}.data , A.GPS_time);
@@ -19,8 +20,8 @@ end
 
 physical_constants;
 
-% A=load(data_fn);
-% L=load(layer_fn);
+ A=load(data_fn);
+ %L=load(layer_fn);
 
 
 % distance=geodetic_to_along_track(A.Latitude,A.Longitude,A.Elevation); %Horizontal Distance

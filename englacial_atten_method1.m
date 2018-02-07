@@ -89,13 +89,13 @@ Greenland.ice_bed_power_cgl_sorted(idx) = [];
 Greenland.depth_sorted (idx)= [];
 
 %Mean -141 for 20110429_01_028
-Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./median(Greenland.ice_bed_power_cgl_sorted);
+Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./mean(Greenland.ice_bed_power_cgl_sorted);
 if plots
     figure(6);plot(Greenland.depth_sorted, lp((Greenland.ice_bed_power_rgl_sorted)));
     grid on
     title('After Mean Removed')
 end
-avg_power = lp(median(Greenland.ice_bed_power_cgl_sorted))  %6.3224 dB
+median_power = lp(median(Greenland.ice_bed_power_cgl_sorted))  %6.3224 dB
 mean_power=lp(mean(Greenland.ice_bed_power_cgl_sorted))
 max_power=max(lp(Greenland.ice_bed_power_cgl_sorted))
 avg_depth = mean(Greenland.depth_sorted)     %1.6033 km
@@ -109,7 +109,7 @@ Na=(val(end)-val(1))/(Greenland.depth(end)-Greenland.depth(1))*1000    %One way 
 
 ice_bed_reflectivity=lp(Greenland.ice_bed_power_rgl_sorted)+2*Na*(Greenland.depth_sorted-avg_depth)/1000;
 figure;histogram(ice_bed_reflectivity);
-
+keyboard
 
 %Decimate
 lat=decimate(Greenland.Latitude_sorted,100);
