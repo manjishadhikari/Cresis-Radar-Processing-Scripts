@@ -4,6 +4,7 @@
 
 function rnew =roughness_cal_from_radar_v2(lno,datapath,layer,num_int,coh_int,sf_bin,save_en,sgolay_filter_length,cross_line,direction,debug_flag)
 
+
 %Run from here test
 if 0
   close all;
@@ -356,7 +357,7 @@ for K = 1:length(datapath)
       end
       %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
      % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-       s=sqrt(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+       s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
       
       id = find(isnan(s)|isinf(s)|s==0);
       if length(id) > num_int/2
