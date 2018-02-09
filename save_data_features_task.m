@@ -1090,6 +1090,7 @@ end
   %Save settings
   Greenland.settings.day=Day_seg{k};
   Greenland.settings.frms=frms{k};
+  Greenland.settings.gitInfo=getGitInfo();
   
   keyboard
   %Peterman

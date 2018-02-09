@@ -1,7 +1,6 @@
   
 function [success]=laser_radar_roughness_comparision_task(param)
 
-gitInfo=getGitInfo();
 
 c=3e8;
 

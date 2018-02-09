@@ -57,16 +57,19 @@ function gitInfo=getGitInfo()
 % or implied, of <copyright holder>.
 
  gitInfo=[];
-if ~exist('.git','file') || ~exist('.git/HEAD','file')
-    %Git is not present
-    return
-end
+ 
+% if ~exist('./.git','file') || ~exist('./.git/HEAD','file')
+%     %Git is not present
+%     return
+% end
 
 
-
+cur_filepath=mfilename('fullpath');
+cur_path=fileparts(cur_filepath);
+gitpath=fullfile(cur_path,'.git/');
 %Read in the HEAD information, this will tell us the location of the file
 %containing the SHA1
-text=fileread('.git/HEAD');
+text=fileread(fullfile(gitpath,'HEAD'));
 parsed=textscan(text,'%s');
 
 if ~strcmp(parsed{1}{1},'ref:') || ~length(parsed{1})>1
@@ -74,6 +77,7 @@ if ~strcmp(parsed{1}{1},'ref:') || ~length(parsed{1})>1
         %give up
         return
 end
+
 
 path=parsed{1}{2};
 [pathstr, name, ext]=fileparts(path);
@@ -84,13 +88,13 @@ gitInfo.branch=branchName;
 
 
 %Read in SHA1
-SHA1text=fileread(fullfile(['.git/' pathstr],[name ext]));
+SHA1text=fileread(fullfile([gitpath pathstr],[name ext]));
 SHA1=textscan(SHA1text,'%s');
 gitInfo.hash=SHA1{1}{1};
 
 
 %Read in config file
-config=fileread('.git/config');
+config=fileread(fullfile(gitpath,'config'));
 %Find everything space delimited
 temp=textscan(config,'%s','delimiter','\n');
 lines=temp{1};
@@ -150,5 +154,5 @@ for k=1:length(lines)
     
     end
 end
-
+gitInfo.cur_date=datestr(now);
 gitInfo.url=url;

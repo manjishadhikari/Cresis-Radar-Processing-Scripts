@@ -504,6 +504,7 @@ rnew.settings.sf_bin=sf_bin;
 rnew.settings.frames=datapath;
 rnew.settings.int_dist=dist(num_int);
 rnew.settings.repeat_dist=dist(repeat_after);
+rnew.settings.gitInfo=getGitInfo();
 rnew.roll=rnew.roll(uidx);
 
 if debug_flag
