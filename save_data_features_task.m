@@ -391,6 +391,7 @@ end
         saveas(figure(2),save_path,'jpg')
        
       else
+        if 0
         if Peterman
             save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('verticalline%d',k),'/',sprintf('Data_%s_%03d', param1.day_seg, frm)];
         else
@@ -404,6 +405,7 @@ end
           mkdir(save_dir);
         end
         saveas(figure(2),save_path,'jpg')
+        end
       end
     end
      

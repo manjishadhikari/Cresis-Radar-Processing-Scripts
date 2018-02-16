@@ -1,12 +1,8 @@
 
-
-
-
-
-function rnew =roughness_cal_from_radar_v2(lno,datapath,layer,num_int,coh_int,sf_bin,save_en,sgolay_filter_length,cross_line,direction,debug_flag,git_path)
+clearvars
 
 %Run from here test
-if 0
+if 1
   close all;
   if ispc
     base_path_sr='Y:';
@@ -17,20 +13,22 @@ if 0
   end
   
   warning('Test running')
-  lno=4;           %Choose the frame to test
+  lno=13;           %Choose the frame to test
   sgolay_filter_length=0;
   direction=-1;
-  cross_line=0;
-  datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2011_Greenland_P3','CSARP_manjish','20110507_02',[sprintf('Data_20110507_02_%03d.mat',lno)]));
-  layer{1}=(fullfile(base_path_dp,'ct_data','rds','2011_Greenland_P3','CSARP_layerData','20110507_02',[sprintf('Data_20110507_02_%03d.mat',lno)]));
-  
-  %datapath{1}=(['X:\ct_data\rds\2010_Greenland_DC8\manjish\CSARP_Data\20100324_01\Data_20100324_01_',sprintf('%03d',lno)]);
-  %layer{1}=(['X:\ct_data\rds\2010_Greenland_DC8\CSARP_layerData\20100324_01\Data_20100324_01_',sprintf('%03d',lno)]);
-  num_int=600;
-  coh_int=0;
-  sf_bin=[-5 5];
+  cross_line=1;
+     datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_manjish','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
+    layer{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_layerData','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
+  %
+ % datapath{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_ant_qlook\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
+  %layer{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_layerData\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
+  % num_int=600;
+  coh_int_true=0;
+  incoh_int_true=1;
+  coh_int=10;
+  sf_bin=[0 0];
   save_en=0;
-  debug_flag=0;
+  debug_flag=1;
   
 end
 
@@ -69,7 +67,7 @@ for K = 1:length(datapath)
   % data=load(['X:\ct_data\rds\2010_Greenland_DC8\manjish\CSARP_Data\20100324_01\Data_20100324_01_',sprintf('%03d',K)]);
   
   %% COHERENT INTEGRATIONS
-  if coh_int==0 | coh_int==0
+  if coh_int_true==0 & coh_int==0 & incoh_int_true==0
     disp(datapath{K})
     data=load(datapath{K});
     L=load(layer{K});
@@ -96,9 +94,12 @@ for K = 1:length(datapath)
     %        Elevation=nan*ones(1,Nx);
     %        surface_twtt_tmp=nan*ones(1,Nx);
     
-    for i= 1:Nx
-      idx1=(i-1)*coh_int+1;
-      idx2=i*coh_int;
+    for i= 1:(length(tmp_data.GPS_time)-coh_int)
+     % idx1=(i-1)*coh_int+1;
+      %idx2=i*coh_int;
+      idx1=i;
+      idx2=i+coh_int;
+     
       if idx2>length(tmp_data.GPS_time) & length(tmp_data.GPS_time)-idx1>coh_int/2
         idx2=length(tmp_data.GPS_time);
       elseif idx2>length(tmp_data.GPS_time)& length(tmp_data.GPS_time)-idx1<coh_int/2
@@ -110,9 +111,15 @@ for K = 1:length(datapath)
       data.Elevation(i)=mean(tmp_data.Elevation(idx1:idx2));
       data.Surface(i)=mean(tmp_data.Surface(idx1:idx2));
       data.Roll(i)=mean(tmp_data.Roll(idx1:idx2));
+      
+      if coh_int_true
       data.Data(:,i)=mean((tmp_data.Data(:,idx1:idx2)),2);
+      elseif incoh_int_true
+      data.Data(:,i)=mean((abs(tmp_data.Data(:,idx1:idx2)).^2),2);           
+      end
     end
     data.Time=tmp_data.Time;
+    clear tmp_data
   end
   
   %%
@@ -136,7 +143,8 @@ for K = 1:length(datapath)
   
   
   dt= data.Time(2)-data.Time(1);
-  index = round((surface_twtt-data.Time(1))/dt);
+  %index = round((surface_twtt-data.Time(1))/dt);
+  index=round(interp1(data.Time,1:size(data.Data,1),surface_twtt));
   ice_surface_power  = zeros(1,length(data.Surface));
   %
   %
@@ -173,14 +181,7 @@ for K = 1:length(datapath)
       [bed_power idx] = max(lp(data.Data(index(i)-0:index(i)+0,i)));
       bed_index = idx + index(i)+0-1;
       %                     ice_bed_echos(:,i)= data.Data(index(i)-15:index(i)+15,i);
-      %  N = mean((data.Data(bed_index+200:bed_index+500,i)));
-      idx1=bed_index+200;
-      idx2=bed_index+500;
-      if idx1>size(data.Data,1) | idx2>size(data.Data,1)
-        idx2=size(data.Data,1);
-        idx1=idx2-300;
-      end
-      N = mean((data.Data(idx1:idx2,i)));  %Noise floor
+      N = mean((data.Data(bed_index+200:bed_index+500,i)));
       SNR=(bed_power)-lp(N);
       % SNR = 10*log10((abs(bed_power).^2)/abs(N).^2);
       if SNR > 3
@@ -194,7 +195,6 @@ for K = 1:length(datapath)
       end
     end
   end
-  %
   %
   %
   if debug_flag
@@ -215,33 +215,6 @@ for K = 1:length(datapath)
   ice_surface_power(idx)=[];
   
   %%Only unique latitude values
-  
-  clear idx1 idx2;
-  if cross_line==0
-    [data.Latitude, un_idx]=unique(data.Latitude);
-    data.GPS_time=data.GPS_time(un_idx);
-    data.Longitude=data.Longitude(un_idx);
-    data.Elevation=data.Elevation(un_idx);
-    data.Surface=data.Surface(un_idx);
-    data.Data=data.Data(:,un_idx);
-    surface_twtt=surface_twtt(un_idx);
-    bottom_twtt=bottom_twtt(un_idx);
-    ice_surface_power=ice_surface_power(un_idx);
-    ice_bed_power=ice_bed_power(un_idx);
-    data.Roll=data.Roll(un_idx);
-  else
-    [data.Longitude, un_idx]=unique(data.Longitude);
-    data.GPS_time=data.GPS_time(un_idx);
-    data.Latitude=data.Latitude(un_idx);
-    data.Elevation=data.Elevation(un_idx);
-    data.Surface=data.Surface(un_idx);
-    data.Data=data.Data(:,un_idx);
-    surface_twtt=surface_twtt(un_idx);
-    bottom_twtt=bottom_twtt(un_idx);
-    ice_surface_power=ice_surface_power(un_idx);
-    ice_bed_power=ice_bed_power(un_idx);
-    data.Roll=data.Roll(un_idx);
-  end
   
   %HAck
   if strcmp(datapath{K}, 'X:\ct_data\rds\2011_Greenland_P3\CSARP_manjish\20110429_01\Data_20110429_01_020.mat');
@@ -298,10 +271,23 @@ for K = 1:length(datapath)
     
     figure(4);plot(data.Latitude,data.Elevation-surface_twtt*c/2); title('Elevation versus latitude')
   end
+  data.roll=data.Roll*180/pi;
+  %   idx_roll=find(data.roll>5);
+  %
+  %
+  %   surface_twtt(idx_roll) = [];
+  %   bottom_twtt(idx_roll)=[];
+  %   data.Latitude(idx_roll) = [];
+  %   data.Longitude(idx_roll) = [];
+  %   data.Elevation(idx_roll) = [] ;
+  %   ice_bed_power(idx_roll) =[];
+  %   ice_surface_power(idx_roll)=[];
   
-  
-  
-  
+  if debug_flag
+    figure(3);imagesc([],data.Time*1e6,lp(data.Data));
+    figure(3);hold on; plot(surface_twtt*1e6);title('After truncation');
+    figure(3);hold on; plot(bottom_twtt*1e6);title('After truncation');
+  end
   %    COHERENT INTEGRATIONS
   %       Nx=floor(length(ice_surface_power)/20);
   %        ice_surface_power_tmp=nan*ones(1,Nx);
@@ -332,229 +318,210 @@ for K = 1:length(datapath)
   %          figure(3);hold on;plot(lp(ice_surface_power,'r'));
   %
   
-  %num_int=1000;
-  disp(sprintf('Sampled distance : %d metres', dist(num_int)))
-  repeat_after=1000;
-  data.roll=data.Roll*180/pi;
   
-  k = 1;
-  for l = num_int/2:repeat_after:length(ice_surface_power)
-    if ((l >= num_int/2) && ((l+num_int/2) < length(ice_surface_power)))
-      if all(abs(data.roll((l-num_int/2+1):(l+num_int/2)))<5)
-        r.lat(k) = nanmean(data.Latitude((l-num_int/2+1):(l+num_int/2)));
-        r.lon(k) = nanmean(data.Longitude((l-num_int/2+1):(l+num_int/2)));
-        r.roll(k)=nanmean(data.Roll((l-num_int/2+1):(l+num_int/2)));
-        
-        tmp_elev=data.Elevation((l-num_int/2+1):(l+num_int/2));
-        sf_time=surface_twtt((l-num_int/2+1):(l+num_int/2));
-        sf_elev=tmp_elev-sf_time*c/2;
-        [p,S]=polyfit(1:length(sf_elev),sf_elev,1);
-        fit_val=polyval(p,1:length(sf_elev));
-        diff_elev=sf_elev-fit_val;
-        r.angle(k)=atand((fit_val(1)-fit_val(end))/(dist(num_int)-dist(1)));
-        
-        %       if r.angle(k)>1
-        %         keyboard
-        %       end
-        
-        if debug_flag
-          if k==1
-            figure;plot(sf_elev,'b');
-            hold on; plot(fit_val,'r');
-          end
-        end
-        %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
-        % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-        s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-        
-        id = find(isnan(s)|isinf(s)|s==0);
-        if length(id) > num_int/2
-          r.rms_height(k) = nan;
-          r.dielectric_constant(k) = nan;
-          r.pn(k) = nan;
-          r.pc(k) = nan ;
-          k= k+1;
-          continue
-        else
-          s(id) = [];
-        end
-        
-        % phat = mle(double(abs(s)),'distribution','Rician');
-        % x = 0:0.0001:0.2;
-        % histogram(abs(s))
-        % h = hist((s));
-        try
-          % pd2 = fitdist((((s))).','Rician');
-          %   [pd.s, pd.sigma]=ricefit_fast(s');
-          % pd3=ricefit(s);
-          %phat = mle(((s)),'distribution','Rician');
-          %pd.s=phat(1);
-          %pd.sigma=phat(2);
+  %Parameter tuning
+  int_samples=[600 800 1000 1500 2000];
+  for int_sample=1:length(int_samples)
+    
+    num_int=int_samples(int_sample);
+    %num_int=1000;
+    
+    repeat_after=100;
+    disp(sprintf('Sampled distance : %d metres', round(dist(num_int))))
+    disp(sprintf('repeat after distance : %d metres', round(dist(repeat_after+1))))
+    
+    k = 1;
+    for l =num_int+1:repeat_after:length(ice_surface_power)
+      
+      if ((l >= num_int/2) && ((l+num_int/2) < length(ice_surface_power)))
+        if all(abs(data.roll((l-num_int/2+1):(l+num_int/2)))<5)
+          r.lat(k) = nanmean(data.Latitude((l-num_int/2+1):(l+num_int/2)));
+          r.lon(k) = nanmean(data.Longitude((l-num_int/2+1):(l+num_int/2)));
+          r.roll(k)=nanmean(data.Roll((l-num_int/2+1):(l+num_int/2)));
           
-          [pd.s pd.sigma]=ricefit(s);
-          %[pd2.s pd2.sigma]=ricefit_fast(s);
-          %         [mn vr] = ricestat(pd.s, pd.sigma);
-          %         r.fitted_mean(k)=mn;
-          %         r.fitted_var(k)=vr;
-          %         r.data_mean(k)=mean(s);
-          %         r.data_var(k)=var(s);
-          %Debug
+          tmp_elev=data.Elevation((l-num_int/2+1):(l+num_int/2));
+          sf_time=surface_twtt((l-num_int/2+1):(l+num_int/2));
+          sf_elev=tmp_elev-sf_time*c/2;
+          [p,S]=polyfit(1:length(sf_elev),sf_elev,1);
+          fit_val=polyval(p,1:length(sf_elev));
+          diff_elev=sf_elev-fit_val;
+          r.angle(k)=atand((fit_val(1)-fit_val(end))/(dist(num_int)-dist(1)));
+          
+          %       if r.angle(k)>1
+          %         keyboard
+          %       end
+          
           if debug_flag
-            figure(125);histogram(s,100);
-            x=linspace(0,max(s),100);
-            figure(125);hold on; plot(x,length(s)*max(s)/100*pdf(makedist('Rician','s',pd2.s,'sigma',pd2.sigma),x),'g');
-            figure(125); hold on; plot(x,length(s)*max(s)/100*ricepdf(x,pd.s,pd.sigma),'r');
-          end
-        catch ME
-          warning('unable to fit the distribution')
-          r.rms_height(k) = nan;
-          r.dielectric_constant(k) = nan;
-          r.pn(k) = nan;
-          r.pc(k) = nan ;
-          k = k+1;
-          continue
-        end
-        % A = pdf(pd,x);
-        a = pd.s;
-        % pc = 2*10*log10(a);
-        % pn = 10*log10(2*pd.sigma^2);
-        S = pd.sigma;
-        r.pc(k) = a^2;
-        r.pn(k) = 2*pd.sigma^2;
-        rms_fit = (r.pc(k)/r.pn(k))*4*(2*pi/(c/param.radar.fs))^2;
-        
-        %% Test
-        % r.rms_height_test(k)=((c/param.radar.fs)*exp(1/(2*(r.pc(k)/r.pn(k)))))/(4*pi*sqrt((r.pc(k)/r.pn(k))));
-        %%
-        r.rms_height(k) = 0.0001;
-        clear MSE
-        for i = 1:5000
-          MSE(i) = abs(rms_fit - exp(-(2*(2*pi/(c/param.radar.fs))*r.rms_height(k))^2)/((r.rms_height(k))^2));
-          if r.rms_height(k) > 0.4
-            r.rms_height(k) = nan;
-            warning('check this')
-            %                         keyboard
-            break
-          else
-            
-            if i>1
-              if MSE(i-1) < MSE(i)
-                break
-              else
-                r.rms_height(k) = r.rms_height(k) + 0.0001;
-                continue  ;
-              end
-            else
-              r.rms_height(k) = r.rms_height(k) + 0.0001;
+            if k==1
+              figure;plot(sf_elev,'b');
+              hold on; plot(fit_val,'r');
             end
           end
-        end
-        
-        
-        if isnan(r.rms_height(k))
-          r.dielectric_constant(k) = nan;
-        else
-          r.dielectric_constant(k) = 1;
-          clear mse
+          %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
+          % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+         if incoh_int_true==0
+          s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+         else
+            s=sqrt(((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+         end
+          
+        id = find(isnan(s)|isinf(s)|s==0);
+          if length(id) > num_int/2
+            r.rms_height(k) = nan;
+            r.dielectric_constant(k) = nan;
+            r.pn(k) = nan;
+            r.pc(k) = nan ;
+            k= k+1;
+            continue
+          else
+            s(id) = [];
+          end
+          
+          % phat = mle(double(abs(s)),'distribution','Rician');
+          % x = 0:0.0001:0.2;
+          % histogram(abs(s))
+          % h = hist((s));
+          try
+            %  pd = fitdist((((s))).','Rician');
+            %   [pd.s, pd.sigma]=ricefit_fast(s');
+            % pd3=ricefit(s);
+            % phat = mle(((s)),'distribution','Rician');
+            %pd.s=phat(1);
+            %pd.sigma=phat(2);
+            
+            [pd.s pd.sigma]=ricefit(double(s'));
+            %         [mn vr] = ricestat(pd.s, pd.sigma);
+            %         r.fitted_mean(k)=mn;
+            %         r.fitted_var(k)=vr;
+            %         r.data_mean(k)=mean(s);
+            %         r.data_var(k)=var(s);
+            if debug_flag
+              figure(125);histogram(s,100);
+              x=linspace(0,max(s),100);
+              % figure(125);hold on; plot(x,length(s)*max(s)/100*pdf(makedist('Rician','s',pd2.s,'sigma',pd2.sigma),x),'g');
+              figure(125); hold on; plot(x,length(s)*max(s)/100*ricepdf(x,pd.s,pd.sigma),'r');
+            end
+            
+            
+          catch ME
+            warning('unable to fit the distribution')
+            r.rms_height(k) = nan;
+            r.dielectric_constant(k) = nan;
+            r.pn(k) = nan;
+            r.pc(k) = nan ;
+            k = k+1;
+            continue
+          end
+          % A = pdf(pd,x);
+          a = pd.s;
+          % pc = 2*10*log10(a);
+          % pn = 10*log10(2*pd.sigma^2);
+          S = pd.sigma;
+          
+          r.pc(k) = a^2;
+          r.pn(k) = 2*pd.sigma^2;
+          rms_fit = (r.pc(k)/r.pn(k))*4*(2*pi/(c/param.radar.fs))^2;
+          
+          %% Test
+          % r.rms_height_test(k)=((c/param.radar.fs)*exp(1/(2*(r.pc(k)/r.pn(k)))))/(4*pi*sqrt((r.pc(k)/r.pn(k))));
+          %%
+          r.rms_height(k) = 0.0001;
+          clear MSE
           for i = 1:5000
-            mse(i) = abs(r.pc(k) - ((1-sqrt(r.dielectric_constant(k)))/((1+sqrt(r.dielectric_constant(k)))))^2*exp(-(2*(2*pi/(c/param.radar.fs))*r.rms_height(k))^2));
-            if r.dielectric_constant(k) > 4
-              r.dielectric_constant(k) = nan;
+            MSE(i) = abs(rms_fit - exp(-(2*(2*pi/(c/param.radar.fs))*r.rms_height(k))^2)/((r.rms_height(k))^2));
+            if r.rms_height(k) > 0.4
+              r.rms_height(k) = nan;
               warning('check this')
               %                         keyboard
               break
             else
               
               if i>1
-                if mse(i-1) < mse(i)
+                if MSE(i-1) < MSE(i)
                   break
                 else
-                  r.dielectric_constant(k) = r.dielectric_constant(k) + 0.01;
+                  r.rms_height(k) = r.rms_height(k) + 0.0001;
                   continue  ;
                 end
               else
-                r.dielectric_constant(k) = r.dielectric_constant(k) + 0.01;
+                r.rms_height(k) = r.rms_height(k) + 0.0001;
               end
             end
           end
-        end
-        
-        
-        
-        if isnan(r.rms_height(k))
-          k = k+1;
-          continue;
           
+          
+          if isnan(r.rms_height(k))
+            r.dielectric_constant(k) = nan;
+          else
+            r.dielectric_constant(k) = 1;
+            clear mse
+            for i = 1:5000
+              mse(i) = abs(r.pc(k) - ((1-sqrt(r.dielectric_constant(k)))/((1+sqrt(r.dielectric_constant(k)))))^2*exp(-(2*(2*pi/(c/param.radar.fs))*r.rms_height(k))^2));
+              if r.dielectric_constant(k) > 4
+                r.dielectric_constant(k) = nan;
+                warning('check this')
+                %                         keyboard
+                break
+              else
+                
+                if i>1
+                  if mse(i-1) < mse(i)
+                    break
+                  else
+                    r.dielectric_constant(k) = r.dielectric_constant(k) + 0.01;
+                    continue  ;
+                  end
+                else
+                  r.dielectric_constant(k) = r.dielectric_constant(k) + 0.01;
+                end
+              end
+            end
+          end
+          
+         
+          if isnan(r.rms_height(k))
+            k = k+1;
+            continue;
+            
+          end
+          %       if r.rms_height(k)<0.02
+          %         keyboard;
+          %       end
+        else
+          r.rms_height(k)=nan;
         end
-        %       if r.rms_height(k)<0.02
-        %         keyboard;
-        %       end
       end
+      k=k+1;
     end
-    k=k+1;
+    
+    rnew.pc=cat(2,rnew.pc,r.pc);
+    rnew.pn=cat(2,rnew.pn,r.pn);
+    rnew.rms_height=cat(2,rnew.rms_height,r.rms_height);
+    rnew.dielectric_constant=cat(2,rnew.dielectric_constant,r.dielectric_constant);
+    rnew.lat=cat(2,rnew.lat,r.lat);
+    rnew.lon=cat(2,rnew.lon,r.lon);
+    rnew.angle=cat(2,rnew.angle,r.angle);
+    rnew.roll=cat(2,rnew.roll,r.roll);
+    %clearvars -except rnew radarlineno c param
+    
+    r_samp{int_sample}=r;
   end
-  rnew.pc=cat(2,rnew.pc,r.pc);
-  rnew.pn=cat(2,rnew.pn,r.pn);
-  rnew.rms_height=cat(2,rnew.rms_height,r.rms_height);
-  rnew.dielectric_constant=cat(2,rnew.dielectric_constant,r.dielectric_constant);
-  rnew.lat=cat(2,rnew.lat,r.lat);
-  rnew.lon=cat(2,rnew.lon,r.lon);
-  rnew.angle=cat(2,rnew.angle,r.angle);
-  rnew.roll=cat(2,rnew.roll,r.roll);
-  %clearvars -except rnew radarlineno c param
-  
-  %set to nan values for location without rms height values
-  idx=find((rnew.lat==0));
-  rnew.pc(idx)=nan;
-  rnew.pn(idx)=nan;
-  rnew.rms_height(idx)=nan;
-  rnew.dielectric_constant(idx)=nan;
-  rnew.lat(idx)=nan;
-  rnew.lon(idx)=nan;
-  rnew.angle(idx)=nan;
-  rnew.roll(idx)=nan;
-  
-  
 end
 
-clear r;
-
-[rnew.lat,uidx]=unique(rnew.lat);
-rnew.lon=rnew.lon(uidx);
-rnew.rms_height=rnew.rms_height(uidx);
-rnew.dielectric_constant=rnew.dielectric_constant(uidx);
-rnew.angle=rnew.angle(uidx);
-rnew.pc=rnew.pc(uidx);
-rnew.pn=rnew.pn(uidx);
-rnew.settings.coh_int=coh_int;
-rnew.settings.num_int=num_int;
-rnew.settings.sf_bin=sf_bin;
-rnew.settings.frames=datapath;
-rnew.settings.int_dist=dist(num_int);
-rnew.settings.repeat_dist=dist(repeat_after);
-rnew.roll=rnew.roll(uidx);
-rnew.gitInfo=getGitInfo(git_path);
-
-if debug_flag
-  figure;plot(rnew.lat,rnew.rms_height*100);title('RMS Height');
-  figure;plot(rnew.angle);title('Slope')
+for i=3
+  figure(1);hold on; plot(r_samp{i}.rms_height*100);
 end
-
+keyboard
 
 if save_en
   disp(sprintf('Saving radar surface roughness radarline_%s', num2str(lno)))
-  if cross_line==1
-    out_fn=['Y:\manjish\peterman\surfaceroughness\crosslinetest',num2str(lno)];
-  else
-    out_fn=['Y:\manjish\peterman\bedroughness\verticalline',num2str(lno)];
-  end
+ % out_fn=['Y:\manjish\peterman\parametertuning\roughness_no_coh_int',num2str(lno)];
+  out_fn=['/cresis/snfs1/scratch/manjish/peterman/parametertuning/roughness_incoh_int',num2str(lno)];
+  
   out_fn_dir=fileparts(out_fn);
   if ~exist(out_fn_dir,'dir')
     mkdir(out_fn_dir);
   end
   r=rnew;
-  save(out_fn,'r');
-  
+  save(out_fn,'r_samp','int_samples');
 end
-%keyboard
-return

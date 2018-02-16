@@ -13,23 +13,26 @@ radar_rms=[];
 
 debug_flag=0;
 cross_line=param.cross_lines_en;
-num_int=600;
+num_int=1000;
 coh_int=0;
 sf_bin=[0 0]; %[Min Max] [-1 1]
 bypass=0;
 save_en=0;
 if save_en
   warning('Save enabled')
-  keyboard
+  %keyboard
 end
 sgolay_filter_length=0;
 
 if ispc
   base_path_sr='Y:';
-  base_path_dp='X:';
+  base_path_dp='X:';  
+  git_path=fullfile('H:\scripts\matlab\total process');
+
 else
   base_path_sr='/cresis/snfs1/scratch';
   base_path_dp='/cresis/snfs1/dataproducts';
+  git_path=fullfile('/users/manjish/scripts/matlab/total process');
 end
 
 if cross_line==0
@@ -108,7 +111,7 @@ for lno=param.proc_line
       end
     end
     
-    r=roughness_cal_from_radar_v2(lno,datapath,layer,num_int,coh_int,sf_bin,save_en,sgolay_filter_length,cross_line,direction(lno),debug_flag);
+    r=roughness_cal_from_radar_v2(lno,datapath,layer,num_int,coh_int,sf_bin,save_en,sgolay_filter_length,cross_line,direction(lno),debug_flag,git_path);
   else
     if cross_line==1
         load(fullfile(base_path_sr,'manjish','peterman','radarnew', ['crossline',sprintf('%s.mat',num2str(lno))]));
@@ -121,7 +124,7 @@ for lno=param.proc_line
     end
   end
   
-%  keyboard
+  %keyboard
   close all;
  % load([sprintf('Y:\\manjish\\peterman\\sardata\\crossline_roughness%d',lno)])
   if 1
@@ -282,7 +285,7 @@ for lno=param.proc_line
     lat_1=lat_1(un_idx);
     rms_1=rms_1(un_idx);
     elev_1=elev_1(un_idx);
-    if r.lon<180
+    if any((r.lon<180))
       r.lon=360+r.lon;
     end
     idx1=find(lon_1<=r.lon(1),1,'first');
@@ -404,7 +407,7 @@ for lno=param.proc_line
   end
   
   %%
-   load(fullfile(base_path_sr,'manjish','peterman','kuband', 'cl27.mat'));
+  % load(fullfile(base_path_sr,'manjish','peterman','kuband', 'cl27.mat'));
    
   if cross_line==1
     rms_laser=interp1(new_laser_lon,new_rms_l,r.lon,'linear');  %%Interpolate from laser
@@ -514,7 +517,7 @@ end
 settings.num_int=num_int;
 settings.coh_int=coh_int;
 settings.sf_bin=sf_bin;
-settings.gitinfo=gitInfo;
+settings.gitinfo=getGitInfo(git_path);
 
 
 notnan_idx_laser_rms=find(~isnan(laser_rms));
@@ -547,7 +550,7 @@ lon=lon(notnan_idx_laser_rms);
   
   keyboard
   
-if 1                %Save final laser radar roughness
+if save_en                %Save final laser radar roughness
   if cross_line==1
     save_dest=fullfile(base_path_sr,'manjish','peterman','new_process', ['crossline',sprintf('%s.mat',num2str(lno))]);
     save(save_dest,'laser_rms','radar_rms','lat','lon','icessn','settings','r');

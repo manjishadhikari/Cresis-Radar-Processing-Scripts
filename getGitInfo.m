@@ -1,4 +1,4 @@
-function gitInfo=getGitInfo()
+function gitInfo=getGitInfo(git_path)
 % Get information about the Git repository in the current directory, including: 
 %          - branch name of the current Git Repo 
 %          -Git SHA1 HASH of the most recent commit
@@ -64,9 +64,9 @@ function gitInfo=getGitInfo()
 % end
 
 
-cur_filepath=mfilename('fullpath');
-cur_path=fileparts(cur_filepath);
-gitpath=fullfile(cur_path,'.git/');
+% cur_filepath=mfilename('fullpath');
+% cur_path=fileparts(cur_filepath);
+gitpath=fullfile(git_path,'.git/');
 %Read in the HEAD information, this will tell us the location of the file
 %containing the SHA1
 text=fileread(fullfile(gitpath,'HEAD'));
