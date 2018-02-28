@@ -13,9 +13,9 @@ if 1
   end
   
   warning('Test running')
-  lno=13;           %Choose the frame to test
+  lno=14;           %Choose the frame to test
   sgolay_filter_length=0;
-  direction=-1;
+  direction=1;
   cross_line=1;
      datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_manjish','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
     layer{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_layerData','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
@@ -24,11 +24,13 @@ if 1
   %layer{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_layerData\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
   % num_int=600;
   coh_int_true=0;
-  incoh_int_true=1;
-  coh_int=10;
+  incoh_int_true=0;
+  coh_int=0;
   sf_bin=[0 0];
   save_en=0;
-  debug_flag=1;
+  debug_flag=0;
+  geom_correction=0;
+  int_samples=[300 600 1000 1500 2000];
   
 end
 
@@ -39,7 +41,6 @@ end
 disp('Calculating Roughness  from radar......')
 
 dbstop error
-param.radar.fs=1.90e8;
 c=3e8;
 
 physical_constants;
@@ -98,7 +99,7 @@ for K = 1:length(datapath)
      % idx1=(i-1)*coh_int+1;
       %idx2=i*coh_int;
       idx1=i;
-      idx2=i+coh_int;
+      idx2=i+coh_int-1;
      
       if idx2>length(tmp_data.GPS_time) & length(tmp_data.GPS_time)-idx1>coh_int/2
         idx2=length(tmp_data.GPS_time);
@@ -123,6 +124,7 @@ for K = 1:length(datapath)
   end
   
   %%
+  param.radar.fs=1.90e8;
   dist=geodetic_to_along_track(data.Latitude,data.Longitude);
   %surface_twtt=data.Surface;
   surface_twtt=interp1(L.GPS_time, L.layerData{1}.value{2}.data,data.GPS_time,'linear','extrap');
@@ -144,7 +146,7 @@ for K = 1:length(datapath)
   
   dt= data.Time(2)-data.Time(1);
   %index = round((surface_twtt-data.Time(1))/dt);
-  index=round(interp1(data.Time,1:size(data.Data,1),surface_twtt));
+  index=round(interp1(data.Time,1:size(data.Data,1),surface_twtt,'linear','extrap'));
   ice_surface_power  = zeros(1,length(data.Surface));
   %
   %
@@ -161,7 +163,7 @@ for K = 1:length(datapath)
       surface_index = idx + index(i)+sf_bin(1)-1;
       % surface_index=index(i);
       %surface_power=data.Data(index(i));
-      ice_surface_power(i) = data.Data(surface_index,i);
+      ice_surface_power(i) = abs(data.Data(surface_index,i)).^2;
       surface_twtt(i) =  interp1([1:length(data.Time)],data.Time,surface_index);
       
     end
@@ -169,7 +171,8 @@ for K = 1:length(datapath)
   %
   clear index;
   dt= data.Time(2)-data.Time(1);
-  index = round((bottom_twtt-data.Time(1))/dt);
+  %index = round((bottom_twtt-data.Time(1))/dt);
+   index=round(interp1(data.Time,1:size(data.Data,1),bottom_twtt,'linear','extrap'));
   ice_bed_power  = zeros(1,length(data.Surface));
   
   for i = 1:length(bottom_twtt)
@@ -319,8 +322,18 @@ for K = 1:length(datapath)
   %
   
   
+  if geom_correction
+    ice_surf_height=surface_twtt*c/2;
+    geom_corrected=(2*(ice_surf_height)).^2;
+    figure(105);plot(lp(ice_surface_power));
+    ice_surface_power=ice_surface_power.*geom_corrected;
+    figure(105); hold on; plot(lp(ice_surface_power));
+    title('After geom correction')
+  end
+  
+  
   %Parameter tuning
-  int_samples=[600 800 1000 1500 2000];
+
   for int_sample=1:length(int_samples)
     
     num_int=int_samples(int_sample);
@@ -330,8 +343,9 @@ for K = 1:length(datapath)
     disp(sprintf('Sampled distance : %d metres', round(dist(num_int))))
     disp(sprintf('repeat after distance : %d metres', round(dist(repeat_after+1))))
     
+    %keyboard
     k = 1;
-    for l =num_int+1:repeat_after:length(ice_surface_power)
+    for l =num_int/2:repeat_after:length(ice_surface_power)
       
       if ((l >= num_int/2) && ((l+num_int/2) < length(ice_surface_power)))
         if all(abs(data.roll((l-num_int/2+1):(l+num_int/2)))<5)
@@ -359,11 +373,11 @@ for K = 1:length(datapath)
           end
           %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
           % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-         if incoh_int_true==0
-          s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-         else
+        % if incoh_int_true==0
+         % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+         %else
             s=sqrt(((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-         end
+        % end
           
         id = find(isnan(s)|isinf(s)|s==0);
           if length(id) > num_int/2
@@ -508,15 +522,22 @@ for K = 1:length(datapath)
   end
 end
 
-for i=3
+for i=1:length(r_samp)
   figure(1);hold on; plot(r_samp{i}.rms_height*100);
 end
+
+    r=r_samp{4};
+   load([fullfile(base_path_sr,'manjish','2014_Antarctica_DC8','verticalline1.mat')]);
+     [lon_1, un_idx]=unique(icessn.lon);
+     laser_rmsfit=icessn.rms_fit(un_idx);
+   laser_rms=interp1(lon_1,laser_rmsfit,r.lon);
+   figure;plot(r.lon,laser_rms); hold on; plot(r.lon,r.rms_height*100);
 keyboard
 
 if save_en
   disp(sprintf('Saving radar surface roughness radarline_%s', num2str(lno)))
  % out_fn=['Y:\manjish\peterman\parametertuning\roughness_no_coh_int',num2str(lno)];
-  out_fn=['/cresis/snfs1/scratch/manjish/peterman/parametertuning/roughness_incoh_int',num2str(lno)];
+  out_fn=['/cresis/snfs1/scratch/manjish/peterman/parametertuning/roughness_nocoh_geomcorr_int',num2str(lno)];
   
   out_fn_dir=fileparts(out_fn);
   if ~exist(out_fn_dir,'dir')

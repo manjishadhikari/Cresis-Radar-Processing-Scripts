@@ -56,7 +56,7 @@ if plots
     grid on
     title('Depth vd Ice Bed Power after sorting')
 end
-geometric_loss_sorted = (2*(Greenland.surface_height_sorted+Greenland.depth_sorted)).^2;
+geometric_loss_sorted = (2*(Greenland.surface_height_sorted+Greenland.depth_sorted/sqrt(er_ice))).^2;
 Greenland.ice_bed_power_cgl_sorted=Greenland.ice_bed_power_sorted.*geometric_loss_sorted;
 %Greenland.ice_bed_power_cgl_sorted = Greenland.ice_bed_power_cgl(Greenland.index);
 

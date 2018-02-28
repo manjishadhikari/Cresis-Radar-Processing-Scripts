@@ -17,7 +17,7 @@ num_int=1000;
 coh_int=0;
 sf_bin=[0 0]; %[Min Max] [-1 1]
 bypass=0;
-save_en=0;
+save_en=param.save_en;
 if save_en
   warning('Save enabled')
   %keyboard
@@ -50,7 +50,6 @@ end
 
 
 for lno=param.proc_line
-  
   
   %load('Y:\manjish\2014_Antarctica_DC8\verticalline2.mat');
   % load(['Y:\manjish\peterman\laser_icessn\verticalline',sprintf('%s',num2str(lno)),'.mat']);   %laser line
@@ -91,7 +90,7 @@ for lno=param.proc_line
         layer{p}=(fullfile(base_path_dp,'ct_data','rds','2012_Greenland_P3','CSARP_post','CSARP_layerData',Day{lno},[sprintf('Data_%s_%03d.mat',Day{lno},frms{lno}(p))]));
         
       elseif (cross_line==0 & lno>15 &lno<19 ) %2013
-         datapath{p}=(fullfile(base_path_dp,'ct_data','rds','2013_Greenland_P3','manjish','CSARP_data',Day{lno},[sprintf('Data_%s_%03d.mat',Day{lno},frms{lno}(p))]));
+         datapath{p}=(fullfile(base_path_dp,'ct_data','rds','2013_Greenland_P3','manjish','CSARP_Data',Day{lno},[sprintf('Data_%s_%03d.mat',Day{lno},frms{lno}(p))]));
         layer{p}=(fullfile(base_path_dp,'ct_data','rds','2013_Greenland_P3','CSARP_post','CSARP_layerData',Day{lno},[sprintf('Data_%s_%03d.mat',Day{lno},frms{lno}(p))]));
         
       else    %2014
@@ -123,7 +122,8 @@ for lno=param.proc_line
       % load(['Y:\manjish\peterman\radarnew\verticalline',sprintf('%s',num2str(lno)),'.mat']);
     end
   end
-  
+ 
+  if 0
   %keyboard
   close all;
  % load([sprintf('Y:\\manjish\\peterman\\sardata\\crossline_roughness%d',lno)])
@@ -133,7 +133,7 @@ for lno=param.proc_line
   %latitude_laser_ds=downsample(latitude_laser,100);
   %longitude_laser_ds=downsample(longitude_laser,100);
   geotiff_fn =fullfile(base_path_dp,'GIS_data','greenland','Landsat-7','Greenland_natural.tif');
-  %geotiff_fn='X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif';
+  %geotiff_fn='X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_untitled.jpg480m.tif';
   proj = geotiffinfo(geotiff_fn);
   [A CMAP R]= geotiffread(geotiff_fn);
   
@@ -548,15 +548,15 @@ lon=lon(notnan_idx_laser_rms);
   end
 
   
-  keyboard
+  %keyboard
   
 if save_en                %Save final laser radar roughness
   if cross_line==1
-    save_dest=fullfile(base_path_sr,'manjish','peterman','new_process', ['crossline',sprintf('%s.mat',num2str(lno))]);
+    save_dest=fullfile(base_path_sr,'manjish','peterman','new_process3', ['crossline',sprintf('%s.mat',num2str(lno))]);
     save(save_dest,'laser_rms','radar_rms','lat','lon','icessn','settings','r');
     disp(sprintf('Saving crossline_%s\n',num2str(lno)));
   else
-      save_dest=fullfile(base_path_sr,'manjish','peterman','new_process', ['verticalline',sprintf('%s.mat',num2str(lno))]);
+      save_dest=fullfile(base_path_sr,'manjish','peterman','new_process3', ['verticalline',sprintf('%s.mat',num2str(lno))]);
     save(save_dest,'laser_rms','radar_rms','lat','lon','icessn','settings','r');
    % save(['Y:\manjish\peterman\final\verticalline',sprintf('%s',num2str(lno)),'.mat'],'laser_rms','radar_rms','lat','lon','icessn','settings');
    disp(sprintf('Saving verticalline_%s\n',num2str(lno)));
@@ -578,7 +578,8 @@ if 0                %Save radar roughness
   end
   save(out_fn,'r');
 end
-end
+  end
+  end
 end
 
 if 0

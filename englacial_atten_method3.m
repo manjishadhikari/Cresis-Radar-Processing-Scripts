@@ -41,7 +41,7 @@ for M =1:19
   Greenland.surface_height = (Greenland.surface_time)*c/2;
   
   
-  geometric_loss = (2*(Greenland.surface_height+Greenland.depth)).^2;
+  geometric_loss = (2*(Greenland.surface_height+Greenland.depth/sqrt(er_ice))).^2;
   geometric_loss_surface = (2*(Greenland.surface_height)).^2;
   
   if plots

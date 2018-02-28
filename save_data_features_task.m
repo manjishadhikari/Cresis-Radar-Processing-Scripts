@@ -43,21 +43,21 @@ debug_flag = 0;
 
 if Peterman
   %Peterman
-  % if cross_lines
-  %   %   Day_seg={'20100324_01','20120516_01','20120516_01','20140512_01','20140505_01','20140505_01','20140505_01','20140505_01','20140505_01'}
-  %   %   frms={[39 40],[13:16],[79:81],[10 11],[12 13],[33:35],[38:40],[55 56],[59 60]}
-  %
-  %   Day={'20100324_01','20100324_02','20100324_03','20100324_04','20110429_01','20110429_02','20110507_01','20110507_02','20120330_01','20120516_01','20140512_01','20140505_01'};
-  %   Day_seg=repelem(Day,[3,1,1,1,5,1,7,1,1,2,1,5]);
-  %   frms={[36,37],[39,40],[42],[1 2],[1 2],[1 2],[9:12],[13:16],[17:20],[21:24],[25:28],[10:11],[10:14],[15:18],[19:22],[23:26],[27:30],[31:34],[35:37],[1:4],[5 6 7],[13:16],[79:81],[10 11],[12 13],[33 34 35],[38:40],[55 56],[59 60]};
-  %
-  % else
-  %   %      for straight lines
-  %   Day={'20100324_01','20110429_01','20110429_02','20110507_02','20130420_02','20140512_01','20140505_01'};
-  %   Day_seg=repelem(Day,[7,2,4,2,3,2,1]);
-  %   frms={[11 12],[14 15],[17 18],[20 21],[23 24] [30 31],[33 34],[30:32],[33 34],[18:21],[12:15],[2:5],[6:9],[6:8],[17:20],[3 4],[9],[11],[12 13],[17 18],[15 16]};
-  %
-  % end
+  if cross_lines
+    %   Day_seg={'20100324_01','20120516_01','20120516_01','20140512_01','20140505_01','20140505_01','20140505_01','20140505_01','20140505_01'}
+    %   frms={[39 40],[13:16],[79:81],[10 11],[12 13],[33:35],[38:40],[55 56],[59 60]}
+  
+    Day={'20100324_01','20100324_02','20100324_03','20100324_04','20110429_01','20110429_02','20110507_01','20110507_02','20120330_01','20120516_01','20140512_01','20140505_01'};
+    Day_seg=repelem(Day,[3,1,1,1,5,1,7,1,1,2,1,5]);
+    frms={[36,37],[39,40],[42],[1 2],[1 2],[1 2],[9:12],[13:16],[17:20],[21:24],[25:28],[10:11],[10:14],[15:18],[19:22],[23:26],[27:30],[31:34],[35:37],[1:4],[5 6 7],[13:16],[79:81],[10 11],[12 13],[33 34 35],[38:40],[55 56],[59 60]};
+  
+  else
+    %      for straight lines
+    Day={'20100324_01','20110429_01','20110429_02','20110507_02','20130420_02','20140512_01','20140505_01'};
+    Day_seg=repelem(Day,[7,2,4,2,3,2,1]);
+    frms={[11 12],[14 15],[17 18],[20 21],[23 24] [30 31],[33 34],[30:32],[33 34],[18:21],[12:15],[2:5],[6:9],[6:8],[17:20],[3 4],[9],[11],[12 13],[17 18],[15 16]};
+  %fprintf('%d %d', fsu(m), fsl(m))
+  end
   
   
 else
@@ -207,7 +207,7 @@ end
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','manjish/CSARP_Data');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
-    else
+      else
       param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2014_Greenland_P3.xls'),Day_seg{k});
       param=mergestruct(param,param1);
       gps_fn = ct_filename_support(param,'','gps',1);
@@ -257,13 +257,13 @@ end
     data = load(data_fn);
     tmp = load(layer_fn);
     
-    surface_twtt=interp1(tmp.GPS_time,tmp.layerData{1}.value{2}.data , data.GPS_time,'linear');
+    surface_twtt=interp1(tmp.GPS_time,tmp.layerData{1}.value{2}.data , data.GPS_time,'linear','extrap');
     surface_twtt(isinf(surface_twtt))=nan;
     
 %     extrap_idx=find(data.GPS_time>=tmp.GPS_time(end),1,'first');
 %     %extrap_idx=find(isnan(surface_twtt),1,'first');
 %     surface_twtt(extrap_idx-50:end)=nanmean(surface_twtt(extrap_idx-50:extrap_idx-1));
-     bottom_twtt = interp1(tmp.GPS_time,tmp.layerData{2}.value{2}.data , data.GPS_time,'linear');
+     bottom_twtt = interp1(tmp.GPS_time,tmp.layerData{2}.value{2}.data , data.GPS_time,'linear','extrap');
       bottom_twtt(isinf(bottom_twtt))=nan;
 %    bottom_twtt(extrap_idx-50:end)=nanmean(bottom_twtt(extrap_idx-50:extrap_idx-1));
      
@@ -279,7 +279,8 @@ end
     %         surface_twtt = sgolayfilt(surface_twtt, 2,filter_length+1, hanning(filter_length+1));
     dt= data.Time(2)-data.Time(1);
     dh=dt*c/sqrt(3.14);
-    index_sf = round((surface_twtt-data.Time(1))/dt);
+    %index_sf = round((surface_twtt-data.Time(1))/dt);
+    index_sf=round(interp1(data.Time,1:size(data.Data,1),surface_twtt,'linear','extrap'));
     ice_surface_power  = zeros(1,length(data.Surface));
     
     for i = 1:length(surface_twtt)
@@ -305,7 +306,8 @@ end
     
     %Bottom Tracking 
    
-            index_bt = round((bottom_twtt-data.Time(1))/dt);
+           % index_bt = round((bottom_twtt-data.Time(1))/dt);
+             index_bt=round(interp1(data.Time,1:size(data.Data,1),bottom_twtt,'linear','extrap'));
             ice_bed_power  = zeros(1,length(data.Surface));
 
             for i = 1:length(bottom_twtt)
@@ -1092,7 +1094,12 @@ end
   %Save settings
   Greenland.settings.day=Day_seg{k};
   Greenland.settings.frms=frms{k};
-  Greenland.settings.gitInfo=getGitInfo();
+  if ispc
+    git_path=fullfile('H:\scripts\matlab\total process');
+  else
+     git_path=fullfile('/users/manjish/scripts/matlab/total process');
+  end
+  Greenland.settings.gitInfo=getGitInfo(git_path);
   
   keyboard
   %Peterman
@@ -1107,7 +1114,7 @@ end
   else
     disp(sprintf('Saving Vertical Line %d\n',k))
     if Peterman
-        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline_tst' num2str(k,'%d') '.mat'],'Greenland');
     else
         save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
  

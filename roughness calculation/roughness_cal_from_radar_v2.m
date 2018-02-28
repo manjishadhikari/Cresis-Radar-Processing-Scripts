@@ -19,7 +19,7 @@ if 0
   warning('Test running')
   lno=4;           %Choose the frame to test
   sgolay_filter_length=0;
-  direction=-1;
+  direction=1;
   cross_line=0;
   datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2011_Greenland_P3','CSARP_manjish','20110507_02',[sprintf('Data_20110507_02_%03d.mat',lno)]));
   layer{1}=(fullfile(base_path_dp,'ct_data','rds','2011_Greenland_P3','CSARP_layerData','20110507_02',[sprintf('Data_20110507_02_%03d.mat',lno)]));
@@ -28,20 +28,31 @@ if 0
   %layer{1}=(['X:\ct_data\rds\2010_Greenland_DC8\CSARP_layerData\20100324_01\Data_20100324_01_',sprintf('%03d',lno)]);
   num_int=600;
   coh_int=0;
-  sf_bin=[-5 5];
+  sf_bin=[0 0];
   save_en=0;
   debug_flag=0;
-  
+  geom_correction=0;
 end
 
+if ~exist('geom_correction','var')
+  geom_correction=0;
+end
 
+if ~exist('coh_int_true','var')
+  coh_int_true=0;
+  coh_int=0;
+end
+if ~exist('incoh_int_true','var')
+  incoh_int_true=0;
+  coh_int=0;
+end
 
 %%
 
 disp('Calculating Roughness  from radar......')
 
 dbstop error
-param.radar.fs=1.90e8;
+%param.radar.fs=1.9e8;
 c=3e8;
 
 physical_constants;
@@ -96,9 +107,9 @@ for K = 1:length(datapath)
     %        Elevation=nan*ones(1,Nx);
     %        surface_twtt_tmp=nan*ones(1,Nx);
     
-    for i= 1:Nx
-      idx1=(i-1)*coh_int+1;
-      idx2=i*coh_int;
+    for i= 1:(length(tmp_data.GPS_time)-coh_int)
+      idx1=i;
+      idx2=i+coh_int-1;
       if idx2>length(tmp_data.GPS_time) & length(tmp_data.GPS_time)-idx1>coh_int/2
         idx2=length(tmp_data.GPS_time);
       elseif idx2>length(tmp_data.GPS_time)& length(tmp_data.GPS_time)-idx1<coh_int/2
@@ -110,9 +121,14 @@ for K = 1:length(datapath)
       data.Elevation(i)=mean(tmp_data.Elevation(idx1:idx2));
       data.Surface(i)=mean(tmp_data.Surface(idx1:idx2));
       data.Roll(i)=mean(tmp_data.Roll(idx1:idx2));
-      data.Data(:,i)=mean((tmp_data.Data(:,idx1:idx2)),2);
+      if coh_int_true
+        data.Data(:,i)=mean((tmp_data.Data(:,idx1:idx2)),2);
+      elseif incoh_int_true
+        data.Data(:,i)=mean((abs(tmp_data.Data(:,idx1:idx2)).^2),2);
+      end
     end
     data.Time=tmp_data.Time;
+    clear tmp_data;
   end
   
   %%
@@ -136,7 +152,8 @@ for K = 1:length(datapath)
   
   
   dt= data.Time(2)-data.Time(1);
-  index = round((surface_twtt-data.Time(1))/dt);
+  %index = round((surface_twtt-data.Time(1))/dt);
+  index=round(interp1(data.Time,1:size(data.Data,1),surface_twtt,'linear','extrap'));
   ice_surface_power  = zeros(1,length(data.Surface));
   %
   %
@@ -153,7 +170,7 @@ for K = 1:length(datapath)
       surface_index = idx + index(i)+sf_bin(1)-1;
       % surface_index=index(i);
       %surface_power=data.Data(index(i));
-      ice_surface_power(i) = data.Data(surface_index,i);
+      ice_surface_power(i) = abs(data.Data(surface_index,i)).^2;
       surface_twtt(i) =  interp1([1:length(data.Time)],data.Time,surface_index);
       
     end
@@ -161,7 +178,8 @@ for K = 1:length(datapath)
   %
   clear index;
   dt= data.Time(2)-data.Time(1);
-  index = round((bottom_twtt-data.Time(1))/dt);
+  %index = round((bottom_twtt-data.Time(1))/dt);
+  index=round(interp1(data.Time,1:size(data.Data,1),bottom_twtt,'linear','extrap'));
   ice_bed_power  = zeros(1,length(data.Surface));
   
   for i = 1:length(bottom_twtt)
@@ -184,7 +202,7 @@ for K = 1:length(datapath)
       SNR=(bed_power)-lp(N);
       % SNR = 10*log10((abs(bed_power).^2)/abs(N).^2);
       if SNR > 3
-        ice_bed_power(i) =data.Data(bed_index,i);
+        ice_bed_power(i) =abs(data.Data(bed_index,i)).^2;
         bottom_twtt(i) =  interp1([1:length(data.Time)],data.Time,bed_index);
       else
         %                         keyboard
@@ -284,7 +302,7 @@ for K = 1:length(datapath)
       surface_twtt=surface_twtt(dr_idx+1:end);
       bottom_twtt=bottom_twtt(dr_idx+1:end);
       ice_surface_power=ice_surface_power(dr_idx+1:end);
-      ice_bed_power=ice_bed_power(1:dr_idx-1);
+      ice_bed_power=ice_bed_power(dr_idx+1:end);
       data.Roll=data.Roll(dr_idx+1:end);
     end
   end
@@ -300,7 +318,15 @@ for K = 1:length(datapath)
   end
   
   
-  
+  if geom_correction
+    ice_surf_height=surface_twtt*c/2;
+    geom_corrected=(2*(ice_surf_height)).^2;
+    figure(105);subplot(2,1,1);plot(lp(ice_surface_power));
+    figure(105);subplot(2,1,2); plot(lp(geom_corrected));
+    ice_surface_power=ice_surface_power.*geom_corrected;
+    figure(105);subplot(2,1,1); hold on; plot(lp(ice_surface_power));
+    title('After geom correction')
+  end
   
   %    COHERENT INTEGRATIONS
   %       Nx=floor(length(ice_surface_power)/20);
@@ -333,9 +359,10 @@ for K = 1:length(datapath)
   %
   
   %num_int=1000;
-  disp(sprintf('Sampled distance : %d metres', dist(num_int)))
-  repeat_after=1000;
+  disp(sprintf('Sampled distance : %d metres', round(dist(num_int))))
+  repeat_after=100;
   data.roll=data.Roll*180/pi;
+  param.radar.fs=(data.param_get_heights.radar.wfs(1).f0+data.param_get_heights.radar.wfs(1).f1)/2;
   
   k = 1;
   for l = num_int/2:repeat_after:length(ice_surface_power)
@@ -365,7 +392,7 @@ for K = 1:length(datapath)
         end
         %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
         % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-        s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+        s=(sqrt((ice_bed_power((l-num_int/2+1):(l+num_int/2)))));
         
         id = find(isnan(s)|isinf(s)|s==0);
         if length(id) > num_int/2
@@ -519,21 +546,36 @@ end
 
 clear r;
 
-[rnew.lat,uidx]=unique(rnew.lat);
-rnew.lon=rnew.lon(uidx);
-rnew.rms_height=rnew.rms_height(uidx);
-rnew.dielectric_constant=rnew.dielectric_constant(uidx);
-rnew.angle=rnew.angle(uidx);
-rnew.pc=rnew.pc(uidx);
-rnew.pn=rnew.pn(uidx);
+if cross_line==0
+  [rnew.lat,uidx]=unique(rnew.lat);
+  rnew.lon=rnew.lon(uidx);
+  rnew.rms_height=rnew.rms_height(uidx);
+  rnew.dielectric_constant=rnew.dielectric_constant(uidx);
+  rnew.angle=rnew.angle(uidx);
+  rnew.pc=rnew.pc(uidx);
+  rnew.pn=rnew.pn(uidx);
+  rnew.roll=rnew.roll(uidx);
+else
+  [rnew.lat,uidx]=unique(rnew.lat);
+  rnew.lon=rnew.lon(uidx);
+  rnew.rms_height=rnew.rms_height(uidx);
+  rnew.dielectric_constant=rnew.dielectric_constant(uidx);
+  rnew.angle=rnew.angle(uidx);
+  rnew.pc=rnew.pc(uidx);
+  rnew.pn=rnew.pn(uidx);
+  rnew.roll=rnew.roll(uidx);
+end
+
 rnew.settings.coh_int=coh_int;
 rnew.settings.num_int=num_int;
 rnew.settings.sf_bin=sf_bin;
 rnew.settings.frames=datapath;
 rnew.settings.int_dist=dist(num_int);
 rnew.settings.repeat_dist=dist(repeat_after);
-rnew.roll=rnew.roll(uidx);
-rnew.gitInfo=getGitInfo(git_path);
+rnew.settings.geom_correction=geom_correction;
+rnew.settings.coh_int_true=coh_int_true;
+rnew.settings.incoh_int_true=incoh_int_true;
+%rnew.gitInfo=getGitInfo(git_path);
 
 if debug_flag
   figure;plot(rnew.lat,rnew.rms_height*100);title('RMS Height');
@@ -544,9 +586,12 @@ end
 if save_en
   disp(sprintf('Saving radar surface roughness radarline_%s', num2str(lno)))
   if cross_line==1
-    out_fn=['Y:\manjish\peterman\surfaceroughness\crosslinetest',num2str(lno)];
+   % out_fn=['Y:\manjish\peterman\new_process_radar\surfaceroughness\crossline',num2str(lno)];
+   out_fn=['/cresis/snfs1/scratch/manjish/peterman/new_process_radar/bedroughness/crossline',num2str(lno)]
   else
-    out_fn=['Y:\manjish\peterman\bedroughness\verticalline',num2str(lno)];
+    %out_fn=['Y:\manjish\peterman\new_process_radar\bedroughness\verticalline',num2str(lno)];
+     out_fn=['/cresis/snfs1/scratch/manjish/peterman/new_process_radar/bedroughness/verticalline',num2str(lno)]
+
   end
   out_fn_dir=fileparts(out_fn);
   if ~exist(out_fn_dir,'dir')
