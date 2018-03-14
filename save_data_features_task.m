@@ -1054,8 +1054,8 @@ end
       mapshow(rgb2gray(A),CMAP/1e3);
       xlabel('X (km)');
       ylabel('Y (km)');
-      xlim([-350 -50]);
-      ylim([-1250 -950]);
+      %xlim([-350 -50]);
+      %ylim([-1250 -950]);
       
       hold on
       clear gps.x gps.y
@@ -1066,6 +1066,7 @@ end
       hold on;
       
       scatter(gps.x,gps.y,20,lp(Greenland.ice_bed_power),'fill')
+      scatter(gps.x(1),gps.y(1),40,'X');
       %caxis([-15 15])
       colorbar;
       title('Radar line')
@@ -1114,7 +1115,7 @@ end
   else
     disp(sprintf('Saving Vertical Line %d\n',k))
     if Peterman
-        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline_tst' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
     else
         save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
  

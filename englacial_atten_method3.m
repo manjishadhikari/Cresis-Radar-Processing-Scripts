@@ -534,7 +534,7 @@ for M =1:19
   along_track = along_track/1000;
   modified_attenuation = zeros(size(along_track));
   estimated_na = zeros(size(along_track));
-  Na=5;
+  Na=15.45;
    
       dn = (-10:0.01:10);   %Filter before finding DN????
   for j = 1:length(dn)
@@ -598,6 +598,9 @@ for M =1:19
   %
   % along_track = along_track/1000;
   % plot( modified_atteanuation+ 0.02*(along_track-median(along_track)))
+   %%
+  %ref=Greenland.ice_bed_power_cgl-mean(Greenland.ice_bed_power_cgl)+constant_attenuation;
+  %ref2=Greenland.ice_bed_power_cgl-mean(Greenland.ice_bed_power_cgl)+var_attenuation;
 end
 %%
 depth_G_r_corrected = depth_G_r_corrected / 1000;

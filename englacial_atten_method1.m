@@ -89,7 +89,7 @@ Greenland.ice_bed_power_cgl_sorted(idx) = [];
 Greenland.depth_sorted (idx)= [];
 
 %Mean -141 for 20110429_01_028
-Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./mean(Greenland.ice_bed_power_cgl_sorted);
+Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./max(Greenland.ice_bed_power_cgl_sorted);
 if plots
     figure(6);plot(Greenland.depth_sorted, lp((Greenland.ice_bed_power_rgl_sorted)));
     grid on

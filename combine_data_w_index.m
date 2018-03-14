@@ -25,20 +25,20 @@ Greenland.ice_bed_power_cgl = [];
   Greenland.index.Padj=[];
     Greenland.index.Padj_Na11=[];
     lst=[];
-fprintf('Combining all radar lines..')
+fprintf('Combining all radar lines..\n')
     
-for M =21:40
+for M =1:40
   if M<21
    tmp=load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline', sprintf('%d.mat',M)]);
   else
      N=M-20;
     tmp= load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline', sprintf('%d.mat',N)]);
   end
-  tmp.Greenland.depth =(-tmp.Greenland.surface_time+tmp.Greenland.ice_bed_time).*3*10^8/(2*sqrt(3.15));
+  tmp.Greenland.depth =(-tmp.Greenland.surface_time+tmp.Greenland.ice_bed_time).*3*10^8/(2*sqrt(er_ice));
   
   tmp.Greenland.surface_height = (tmp.Greenland.surface_time)*c/2;
   
-  tmp.geometric_loss = (2*(tmp.Greenland.surface_height+tmp.Greenland.depth)).^2;
+  tmp.geometric_loss = (2*(tmp.Greenland.surface_height+tmp.Greenland.depth/sqrt(er_ice))).^2;
   tmp.geometric_loss_surface = (2*(tmp.Greenland.surface_height)).^2;
   tmp.Greenland.ice_bed_power_cgl =(tmp.Greenland.ice_bed_power).*tmp.geometric_loss;
   
@@ -118,7 +118,7 @@ for M =21:40
   end
   
 end
-out_fn=['/cresis/snfs1/scratch/manjish/peterman/', sprintf('verticalline_w_idx.mat')];
+out_fn=['/cresis/snfs1/scratch/manjish/peterman/', sprintf('completedata_w_idx.mat')];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);

@@ -572,6 +572,7 @@ rnew.settings.sf_bin=sf_bin;
 rnew.settings.frames=datapath;
 rnew.settings.int_dist=dist(num_int);
 rnew.settings.repeat_dist=dist(repeat_after);
+rnew.settings.repeat_after=repeat_after;
 rnew.settings.geom_correction=geom_correction;
 rnew.settings.coh_int_true=coh_int_true;
 rnew.settings.incoh_int_true=incoh_int_true;

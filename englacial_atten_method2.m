@@ -1,6 +1,17 @@
 %Script: estimation_of_relative_reflectivity_values
 %  Fit Na and DN for every 1 km
-%
+%{
+from englacial_att_method1
+
+median_power =
+    8.8886
+mean_power =
+  -15.3333
+max_power =
+   66.3854
+avg_depth =
+   1505
+%}
 
 %% setup
 clear
@@ -9,7 +20,7 @@ clc
 dbstop error
 
 plots =0;
-coh_int=100;
+coh_int=0;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
 lon_G_r_corrected = [];
@@ -24,7 +35,7 @@ variable_attenuation=[];
 
 %%
 disp('Englacial Attn Method 2')
-for M =21:40
+for M =1:40
   
   clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
   clc
@@ -36,7 +47,7 @@ for M =21:40
   else
     M1=M-20;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index_flipped/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -54,7 +65,7 @@ for M =21:40
     figure(2); plot( lp(Greenland.ice_bed_power));
     grid on; title('Along Track vs Power')
     
-    if 0
+    if 0 
       geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
       proj = geotiffinfo(geotiff_fn);
       %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
@@ -77,11 +88,13 @@ for M =21:40
       hold on;
       
       scatter(gps.x,gps.y,20,lp(Greenland.ice_bed_power),'fill')
+      scatter(gps.x(1),gps.y(1),50,'X')
       %caxis([-15 15])
       colorbar;
       title('Radar line')
-    end
     close
+   end
+   
     
   end
   
@@ -124,7 +137,8 @@ for M =21:40
   
   
   
-  
+  Greenland.ice_bed_power=abs(Greenland.ice_bed_power).^2;
+  Greenland.ice_surface_power=abs(Greenland.ice_surface_power).^2;
   
   
   
@@ -186,8 +200,8 @@ for M =21:40
           k= k+1;
           continue;
         else
-          
-          Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k)./(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)/2))^2);
+         sf_corr_power(k)=(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)/2))^2);
+          Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k)*(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs)))^2)/2))^2);
           k= k+1;
         end
       end
@@ -334,6 +348,8 @@ for M =21:40
           k = k+1;
           continue;
         else
+          bed_corr_power(k)=(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)/2))^2);
+    
           Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k)./(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)/2))^2);
           k= k+1;
         end
@@ -355,7 +371,7 @@ for M =21:40
   if plots
     figure(3); plot(lp(orig_avg_power));
     
-    hold on; plot(10*log10(abs( Greenland.ice_bed_power_avg).^2));
+    hold on; plot(lp( Greenland.ice_bed_power_avg));
     grid on
     title('Ice Bed Power surface roughness corrected')
   end
@@ -364,6 +380,7 @@ for M =21:40
   
   
   %% compensating for bed roughness
+  if 0
   file_exist = false;
   if M<21
     if exist((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']),'file')
@@ -395,6 +412,8 @@ for M =21:40
           k= k+1;
           continue ;
         else
+          
+          bed_corr_power(k) =(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fs*(sqrt(er_ice)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fs)*(sqrt(er_ice-1)))^2)/2))^2));
           Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k)./(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fs*(sqrt(er_ice)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fs)*(sqrt(er_ice-1)))^2)/2))^2));
           k = k+1;
         end
@@ -558,11 +577,11 @@ for M =21:40
     clearvars r K
     
   end
-  
+  end
   if plots
     figure(3);
     hold on;
-    plot(10*log10(abs( Greenland.ice_bed_power_avg).^2));
+    plot(lp( Greenland.ice_bed_power_avg));
     grid on
     legend('Original','Sf corrected ',' Bed roughness corrected')
     figure;plot(lp(orig_avg_power)-lp(Greenland.ice_bed_power_avg));
@@ -605,12 +624,16 @@ for M =21:40
   
   %% attenuation_fitting
   %reference_power = 25 ;
-  reference_power = median((Greenland.ice_bed_power_cgl));
-  % reference_power=-62;
+  %reference_power = median((Greenland.ice_bed_power_cgl));
+  reference_power=-15;
   relative_ice_bed_power_G_r_corrected = (Greenland.ice_bed_power_cgl)-reference_power;
   
   %relative_ice_bed_power_G_r_corrected= relative_ice_bed_power_G_r_corrected-mean(relative_ice_bed_power_G_r_corrected);
-  
+   Greenland.depth_avg = Greenland.depth_avg/1000;
+  %relative_depth = mean( Greenland.depth_avg);
+%   relative_depth = nanmean(isfinite(Greenland.depth_avg));
+  relative_depth =1.505;
+  % relative_depth=1.6033;
   if plots
     figure;plot(relative_ice_bed_power_G_r_corrected);
     title('Relative Power')
@@ -628,10 +651,7 @@ for M =21:40
     legend('filtered','original'); title('short filter')
   end
   
-  Greenland.depth_avg = Greenland.depth_avg/1000;
-  %relative_depth = mean( Greenland.depth_avg);
-  relative_depth = nanmean(isfinite(Greenland.depth_avg));
-  % relative_depth=1.6033;
+ 
   
   %% Attenuation calculation
   along_track = geodetic_to_along_track(Greenland.Latitude_avg,Greenland.Longitude_avg);
@@ -649,7 +669,7 @@ for M =21:40
     if length(id) < 1
       continue;
     else
-      Na = 1:0.05:15;    %filter before finding Na???
+      Na = 0:0.05:20;    %filter before finding Na???
       
       for  j = 1:length(Na)
         %         plot(-relative_ice_bed_power_G_r_corrected, '*')% apparent attenuation
@@ -712,7 +732,7 @@ for M =21:40
     %     grid
     
   end
-  %%
+  %%for
   
   
   constant_attenuation =  cat(2,constant_attenuation, const_attenuation);
