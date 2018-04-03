@@ -77,7 +77,7 @@ else
     %Day_seg={'20100514_01','20100514_02'};
     %frms={[5,6],[1,2],[3,4]};
     
-    Day={'20110406_01','20110422_01','20120421_01','20130410_01','20130404_02','20140414','20140409_01','20140409_02'};
+    Day={'20110406_01','20110422_01','20120421_01','20130410_01','20130404_02','20140414_02','20140409_01','20140409_02'};
     Day_seg=repelem(Day,[6,1,9,1,8,2,6,4]);
     frms={[4:6],[7:9],[10:12],[13:15],[16:18],[19:21],[2:4],[7:9],[10:12],[13:15],[16:18],[19:21],[22:24],[25:27],[28],[52],[50:52],[1,2],[3:5],[6,7],[8:10],[11:13],[14],[25],[38:40],[5:6],[12],[5:7],[8:10],[11,12],[13;15],[16,17],[18:20],[15],[19:22],[28:29],[34:36]};
   end
@@ -223,6 +223,7 @@ end
   Greenland.Latitude = [];
   Greenland.Longitude = [];
   Greenland.Elevation = [];
+  Greenland.Roll=[];
   Greenland.ice_bed_time = [];
   Greenland.surface_time = [];
   Greenland.ice_bed_power = [];
@@ -302,6 +303,7 @@ end
     end
     if any(ice_surface_power ==0 )
       keyboard
+      warning('Ice Surface power is zero')
     end
     
     %Bottom Tracking 
@@ -357,6 +359,7 @@ end
     
     if any(ice_bed_power ==0 )
       keyboard
+      warning('Ice bed power is zero')
     end
     
     if debug_flag
@@ -750,7 +753,8 @@ end
             figure(9);hold on;plot(10*log10(abs(data.Data_new(:,idx2)).^2),'g--');
           end
         end
-      end
+        end
+        
       
       if debug_flag
         fh = figure(3);
@@ -1019,9 +1023,11 @@ end
     Greenland.index.bt.waveform=cat(2,Greenland.index.bt.waveform,index.bt.waveform);
     Greenland.index.bt.inc_wf_ave=cat(2,Greenland.index.bt.inc_wf_ave,index.bt.inc_wf_ave);
     
+    end
     Greenland.Latitude = cat(2, Greenland.Latitude, data.Latitude);
     Greenland.Longitude = cat(2, Greenland.Longitude, data.Longitude);
     Greenland.Elevation = cat(2, Greenland.Elevation, data.Elevation);
+    Greenland.Roll=cat(2,Greenland.Roll,data.Roll);
     Greenland.ice_bed_time = cat(2, Greenland.ice_bed_time, bottom_twtt);
     Greenland.surface_time = cat(2, Greenland.surface_time, surface_twtt);
     Greenland.ice_bed_power = cat(2, Greenland.ice_bed_power, ice_bed_power);
@@ -1036,14 +1042,55 @@ end
     
     if ~(length(Greenland.ice_bed_time) ==length(Greenland.ice_bed_power))
       keyboard
+      warning('Ice bed time not equal to power')
     end
-    end
+   
   end
   
   % keyboard
-  if ~param.save_fig_only          %Disable not to save data
+  if ~param.save_fig_only    % ~ changed for saving      %Disable not to save data
   
-   if 0
+    %Check if needed to flip to extend from inward towards the coast
+    if cross_lines
+      % if ismember{param.proc_line,[1,3,5,6])
+      if Greenland.Longitude(1)>Greenland.Longitude(end)
+         flip_line=0;
+       else
+         flip_line=1;
+       end
+    else
+     if Peterman
+         if Greenland.Latitude(1)<Greenland.Latitude(end)
+         flip_line=0;
+       else
+         flip_line=1;
+       end
+     else
+       if Greenland.Latitude(1)>Greenland.Latitude(end)
+         flip_line=0;
+       else
+         flip_line=1;
+       end
+     end
+    end
+%     
+     %Flip lines 
+   if flip_line
+     Greenland.GPS_time=flip(Greenland.GPS_time);
+     Greenland.Latitude=flip(Greenland.Latitude);
+     Greenland.Longitude=flip(Greenland.Longitude);
+     Greenland.Roll=flip(Greenland.Roll);
+     Greenland.Elevation=flip(Greenland.Elevation);
+     Greenland.ice_bed_time=flip(Greenland.ice_bed_time);
+     Greenland.surface_time=flip(Greenland.surface_time);
+     Greenland.ice_bed_power=flip(Greenland.ice_bed_power);
+     Greenland.ice_surface_power=flip(Greenland.ice_surface_power);
+     Greenland.segments_length=flip(Greenland.segments_length);
+     Greenland.flipped=1;
+   end
+    
+    
+   if 1
       geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
       proj = geotiffinfo(geotiff_fn);
       %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
@@ -1054,9 +1101,15 @@ end
       mapshow(rgb2gray(A),CMAP/1e3);
       xlabel('X (km)');
       ylabel('Y (km)');
-      %xlim([-350 -50]);
-      %ylim([-1250 -950]);
       
+      if Peterman
+        xlim([-350 -50]);
+        ylim([-1250 -900]);
+        
+      else
+        xlim([-350 -50]);
+        ylim([-2450 -2150]);
+      end
       hold on
       clear gps.x gps.y
       [gps.x,gps.y] = projfwd(proj,Greenland.Latitude,Greenland.Longitude);
@@ -1066,12 +1119,44 @@ end
       hold on;
       
       scatter(gps.x,gps.y,20,lp(Greenland.ice_bed_power),'fill')
-      scatter(gps.x(1),gps.y(1),40,'X');
+      scatter(gps.x(1),gps.y(1),200,'X');
       %caxis([-15 15])
       colorbar;
       title('Radar line')
-    end
+      
+      if cross_lines
+       if Peterman
+        save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('crossline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+       else
+         save_path=['/cresis/snfs1/scratch/manjish/jacobshavn/images/',sprintf('crossline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+       end
+        [save_dir] =fileparts(save_path);
+        if ~exist(save_dir,'dir')
+          
+          mkdir(save_dir);
+        end
+        saveas(figure(100),save_path,'jpg')
+      else
+        if Peterman
+        save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('verticalline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+       else
+         save_path=['/cresis/snfs1/scratch/manjish/jacobshavn/images/',sprintf('verticalline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+       end
+        [save_dir] =fileparts(save_path);
+        if ~exist(save_dir,'dir')
+          
+          mkdir(save_dir);
+        end
+        saveas(figure(100),save_path,'jpg')
+      end
+      
+      
+   end
   
+   
+  
+   
+   
   %%Truncate lines to prevent aircraft turns that result power loss
   if 0
    max_length=length(Greenland.Latitude);
@@ -1084,6 +1169,7 @@ end
   Greenland.GPS_time=Greenland.GPS_time(start_idx:stop_idx);
   Greenland.Latitude=Greenland.Latitude(start_idx:stop_idx);
   Greenland.Longitude=Greenland.Longitude(start_idx:stop_idx);
+  Greenland.Roll=Greenland.Roll(start_idx:stop_idx);
   Greenland.Elevation=Greenland.Elevation(start_idx:stop_idx);
   Greenland.ice_bed_time=Greenland.ice_bed_time(start_idx:stop_idx);
   Greenland.surface_time=Greenland.surface_time(start_idx:stop_idx);
@@ -1091,7 +1177,7 @@ end
    Greenland.ice_surface_power=Greenland.ice_surface_power(start_idx:stop_idx);
   end
   
-  
+  if 1
   %Save settings
   Greenland.settings.day=Day_seg{k};
   Greenland.settings.frms=frms{k};
@@ -1102,12 +1188,12 @@ end
   end
   Greenland.settings.gitInfo=getGitInfo(git_path);
   
-  keyboard
+  %keyboard
   %Peterman
   if cross_lines
     disp(sprintf('Saving Cross Line %d\n',k))
     if Peterman
-     save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline' num2str(k,'%d') '.mat'],'Greenland');
+     save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
     else
       save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline' num2str(k,'%d') '.mat'],'Greenland');
  
@@ -1115,14 +1201,14 @@ end
   else
     disp(sprintf('Saving Vertical Line %d\n',k))
     if Peterman
-        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
     else
         save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
  
     end
     end
   
-
+  end
  
   end
 end

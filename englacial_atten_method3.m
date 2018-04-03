@@ -140,7 +140,8 @@ for M =1:19
         % histogram(abs(s))
         % h = hist((s));
         
-        % A = pdf(pd,x);
+        % A = pdf(pd,x); method 1 and fit DN for every line
+
         a = pd.s;
         % pc = 2*10*log10(a);
         % pn = 10*log10(2*pd.sigma^2);
@@ -176,7 +177,8 @@ for M =1:19
         
         if isnan(r.rms_height(k))
           r.dielectric_constant(k) = nan;
-        else
+        else method 1 and fit DN for every line
+
           r.dielectric_constant(k) = 1;
           clear mse
           for i = 1:5000
@@ -217,7 +219,8 @@ for M =1:19
           Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-500):(l+499)),Greenland.Longitude((l-500):(l+499))));
           Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-500):(l+499)));
           
-        else
+        else method 1 and fit DN for every line
+
           Greenland.ice_bed_power_avg(k) = nan;
           Greenland.depth_avg(k) = nan;
           Greenland.Latitude_avg(k) = nan;
@@ -259,6 +262,7 @@ for M =1:19
   
   
   %% compensating for bed roughness
+ if 0
   file_exist = false;
   if M<21
     if exist((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']),'file')
@@ -463,6 +467,7 @@ for M =1:19
     grid on
     legend('Sf corrected ',' Bed roughness corrected')
   end
+ end
   
   %%  relative geometrically corrected bed - echo power
   %     for i = 1:length(Greenland.ice_bed_power)

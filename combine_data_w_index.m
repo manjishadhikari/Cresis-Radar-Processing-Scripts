@@ -29,10 +29,10 @@ fprintf('Combining all radar lines..\n')
     
 for M =1:40
   if M<21
-   tmp=load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline', sprintf('%d.mat',M)]);
+   tmp=load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline', sprintf('%d.mat',M)]);
   else
      N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline', sprintf('%d.mat',N)]);
+    tmp= load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline', sprintf('%d.mat',N)]);
   end
   tmp.Greenland.depth =(-tmp.Greenland.surface_time+tmp.Greenland.ice_bed_time).*3*10^8/(2*sqrt(er_ice));
   

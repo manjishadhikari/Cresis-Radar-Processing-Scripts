@@ -35,19 +35,19 @@ variable_attenuation=[];
 
 %%
 disp('Englacial Attn Method 2')
-for M =1:40
+for M =1:61
   
   clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
   clc
   
   param.radar.fs = 195000000;
-  if M<21
+  if M<26
     cross_lines = 1;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline',num2str(M)]);
+    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline',num2str(M)]);
   else
-    M1=M-20;
+    M1=M-25;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -145,15 +145,15 @@ for M =1:40
   
   %% compensating reflected bed power for surface roughness
   file_exist = false;
-  if M<21
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/radarnew/crossline',num2str(M),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/crossline',num2str(M),'.mat']);
+  if M<26
+    if exist((  (['/cresis/snfs1/scratch/manjish/jacobshavn/radarnew/crossline',num2str(M),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/jacobshavn/radarnew/crossline',num2str(M),'.mat']);
       file_exist = true;
     end
   else
     
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/radarnew/verticalline',num2str(M1),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/verticalline',num2str(M1),'.mat']);
+    if exist((  (['/cresis/snfs1/scratch/manjish/jacobshavn/radarnew/verticalline',num2str(M1),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/jacobshavn/radarnew/verticalline',num2str(M1),'.mat']);
       file_exist = true;
     end
   end
@@ -212,10 +212,11 @@ for M =1:40
     %         K  = floor(length(Greenland.ice_surface_power)/1000);
     num_int=600;  % ~210 metres
     repeat_after=100;
+    Greenland.roll=Greenland.Roll*180/pi;
     k=1;
     for l = num_int/2:repeat_after:length(Greenland.ice_surface_power)
       if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_surface_power)))
-        
+        if all(abs(Greenland.roll((l-num_int/2+1):(l+num_int/2)))<5) 
         r.lat(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
         r.lon(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
         s = abs(Greenland.ice_surface_power((l-num_int/2+1):(l+num_int/2)));
@@ -232,14 +233,14 @@ for M =1:40
         end
         
         try
-           pd = fitdist((((s))).','Rician');
+          % pd = fitdist((((s))).','Rician');
           %   [pd.s, pd.sigma]=ricefit_fast(s');
           % pd3=ricefit(s);
           %phat = mle(((s)),'distribution','Rician');
           %pd.s=phat(1);
           %pd.sigma=phat(2);
           
-          %[pd.s, pd.sigma]=ricefit(s);
+          [pd.s, pd.sigma]=ricefit(s);
           %         [mn vr] = ricestat(pd.s, pd.sigma);
           %         r.fitted_mean(k)=mn;
           %         r.fitted_var(k)=vr;
@@ -261,7 +262,7 @@ for M =1:40
         % pn = 10*log10(2*pd.sigma^2);
         S = pd.sigma;
         r.pc(k) = a^2;
-        r.pn(k) = 2*2*pd.sigma^2;
+        r.pn(k) = 2*pd.sigma^2;
         rms_fit = (r.pc(k)/r.pn(k))*4*(2*pi/(c/param.radar.fs))^2;
         
         r.rms_height(k) = 0.001;
@@ -351,19 +352,20 @@ for M =1:40
           bed_corr_power(k)=(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)/2))^2);
     
           Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k)./(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fs))*(sqrt(r.dielectric_constant(k))-1))^2)/2))^2);
-          k= k+1;
-        end
         
+        end
+        end
+          k= k+1;
       end
-      if k+1 == length(Greenland.depth_avg)
-        keyboard
-      end
+%       if k+1 == length(Greenland.depth_avg)
+%         keyboard
+%       end
     end
     disp('Saving surface roughness values')
     if cross_lines
-      save(['/cresis/snfs1/scratch/manjish/surface_roughness/cross_lines' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/jacobshavn/surface_roughness/crossline' num2str(M,'%03d') '.mat'],'r');
     else
-      save(['/cresis/snfs1/scratch/manjish/surface_roughness/vertical_lines' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/jacobshavn/surface_roughness/verticalline' num2str(M,'%03d') '.mat'],'r');
     end
     clearvars r K
   end
@@ -382,15 +384,15 @@ for M =1:40
   %% compensating for bed roughness
   if 0
   file_exist = false;
-  if M<21
-    if exist((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']),'file')
-      load ((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']))
+  if M<26
+    if exist((['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/crossline',num2str(M),'.mat']),'file')
+      load ((['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/crossline',num2str(M),'.mat']))
       file_exist = true;
       r=rbed;
     end
   else
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/bedroughness/verticalline',num2str(M1),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/bedroughness/verticalline',num2str(M1),'.mat']);
+    if exist((  (['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/verticalline',num2str(M1),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/verticalline',num2str(M1),'.mat']);
       file_exist = true;
     end
     r=rbed;
@@ -469,7 +471,7 @@ for M =1:40
         % pn = 10*log10(2*pd.sigma^2);
         S = pd.sigma;
         r.pc(k) = a^2;
-        r.pn(k) = 2*2*pd.sigma^2; 
+        r.pn(k) = 2*pd.sigma^2; 
         rms_fit = (r.pc(k)/r.pn(k))*4*(2*pi/(c/param.radar.fs))^2;
         
         r.rms_height(k) = 0.0001;
@@ -570,9 +572,9 @@ for M =1:40
     
     disp('Saving bedroughness values')
     if cross_lines
-      save(['/cresis/snfs1/scratch/manjish/cross_lines' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/crossline' num2str(M,'%03d') '.mat'],'r');
     else
-      save(['/cresis/snfs1/scratch/manjish/' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/jacobshavn/bedroughness/verticalline' num2str(M,'%03d') '.mat'],'r');
     end
     clearvars r K
     
