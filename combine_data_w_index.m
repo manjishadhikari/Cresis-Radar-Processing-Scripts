@@ -1,9 +1,9 @@
 clear
 close
 clc
-param.radar.fs = 1000000000/9;
+param.radar.fc = 195e6;
 physical_constants
-debug_flag=0;
+debug_flag=1;
 
 Greenland.GPS_time = [];
 Greenland.Latitude = [];
@@ -29,10 +29,10 @@ fprintf('Combining all radar lines..\n')
     
 for M =1:40
   if M<21
-   tmp=load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline', sprintf('%d.mat',M)]);
+   tmp=load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline', sprintf('%d.mat',M)]);
   else
      N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline', sprintf('%d.mat',N)]);
+    tmp= load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline', sprintf('%d.mat',N)]);
   end
   tmp.Greenland.depth =(-tmp.Greenland.surface_time+tmp.Greenland.ice_bed_time).*3*10^8/(2*sqrt(er_ice));
   

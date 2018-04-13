@@ -118,6 +118,14 @@ for k =param.proc_line
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','CSARP_CSARP_manjish');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
+    else
+     param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2014_Greenland_P3.xls'),Day_seg{k});
+      param=mergestruct(param,param1);
+      gps_fn = ct_filename_support(param,'','gps',1);
+      data_dir = ct_filename_out(param,'','CSARP_manjish');
+      layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
+    
+    
     end
     
   else
@@ -258,6 +266,7 @@ end
     data = load(data_fn);
     tmp = load(layer_fn);
     
+ 
     surface_twtt=interp1(tmp.GPS_time,tmp.layerData{1}.value{2}.data , data.GPS_time,'linear','extrap');
     surface_twtt(isinf(surface_twtt))=nan;
     
@@ -369,7 +378,7 @@ end
       title(sprintf('Data-%s-%03d.mat', param1.day_seg, frm))
     end
     
-  
+   
     %Save figure as jpg for checking
    
    if param.save_fig_only
@@ -396,7 +405,7 @@ end
         saveas(figure(2),save_path,'jpg')
        
       else
-        if 0
+        if 1
         if Peterman
             save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('verticalline%d',k),'/',sprintf('Data_%s_%03d', param1.day_seg, frm)];
         else
@@ -412,8 +421,10 @@ end
         saveas(figure(2),save_path,'jpg')
         end
       end
-    end
-     
+   end
+    
+
+    
     if ~param.save_fig_only         %Disable to only save figures and not perform save data features
   
       %Coherence Index and Abruptive Index Calculation
@@ -1046,7 +1057,7 @@ end
     end
    
   end
-  
+ 
   % keyboard
   if ~param.save_fig_only    % ~ changed for saving      %Disable not to save data
   

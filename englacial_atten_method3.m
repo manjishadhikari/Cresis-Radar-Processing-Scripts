@@ -7,7 +7,7 @@ close
 clc
 dbstop error
 
-plots =0;
+plots =1;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
 lon_G_r_corrected = [];
@@ -29,10 +29,10 @@ for M =1:19
   
   param.radar.fs = 195000000;
   if M<21
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline',num2str(M)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline',num2str(M)]);
   else
     M1=M-20;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -53,14 +53,14 @@ for M =1:19
   %% compensating reflected bed power for surface roughness
   file_exist = false;
   if M<21
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/radarnew/crossline',num2str(M),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/crossline',num2str(M),'.mat']);
+    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/crossline',num2str(M),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/crossline',num2str(M),'.mat']);
       file_exist = true;
     end
   else
     
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/radarnew/verticalline',num2str(M1),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/verticalline',num2str(M1),'.mat']);
+    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/verticalline',num2str(M1),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/verticalline',num2str(M1),'.mat']);
       file_exist = true;
     end
   end
@@ -70,8 +70,8 @@ for M =1:19
    k = 1;
     %         for l = 501:250:length(Greenland.ice_surface_power)
     %             if ((l > 500) && ((l+500) < length(Greenland.ice_surface_power)))
-    num_int=r.settings.num_int;
-    repeat_after=300;
+    num_int=600;
+    repeat_after=50;
     for l = num_int/2:repeat_after:length(Greenland.ice_surface_power)
       if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_surface_power)))
         
@@ -177,7 +177,7 @@ for M =1:19
         
         if isnan(r.rms_height(k))
           r.dielectric_constant(k) = nan;
-        else method 1 and fit DN for every line
+        else 
 
           r.dielectric_constant(k) = 1;
           clear mse
@@ -219,7 +219,7 @@ for M =1:19
           Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-500):(l+499)),Greenland.Longitude((l-500):(l+499))));
           Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-500):(l+499)));
           
-        else method 1 and fit DN for every line
+        else 
 
           Greenland.ice_bed_power_avg(k) = nan;
           Greenland.depth_avg(k) = nan;
@@ -245,9 +245,9 @@ for M =1:19
     end
     
     if cross_lines
-      save(['/cresis/snfs1/scratch/manjish/test_r/cross_lines' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
     else
-      save(['/cresis/snfs1/scratch/manjish/test_r/' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/peterman/surface_roughness/verticalline/' num2str(M,'%d') '.mat'],'r');
     end
     clearvars r K
   end
@@ -265,14 +265,14 @@ for M =1:19
  if 0
   file_exist = false;
   if M<21
-    if exist((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']),'file')
-      load ((['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline',num2str(M),'.mat']))
+    if exist((['/cresis/snfs1/scratch/manjish/peterman/bed_roughness/crossline',num2str(M),'.mat']),'file')
+      load ((['/cresis/snfs1/scratch/manjish/peterman/bed_roughness/crossline',num2str(M),'.mat']))
       file_exist = true;
       r=rbed;
     end
   else
-    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/bedroughness/verticalline',num2str(M1),'.mat'])),'file')
-      load(['/cresis/snfs1/scratch/manjish/peterman/bedroughness/verticalline',num2str(M1),'.mat']);
+    if exist((  (['/cresis/snfs1/scratch/manjish/peterman/bed_roughness/verticalline',num2str(M1),'.mat'])),'file')
+      load(['/cresis/snfs1/scratch/manjish/peterman/bed_roughness/verticalline',num2str(M1),'.mat']);
       file_exist = true;
     end
     if ~exist('r','var')
@@ -452,9 +452,9 @@ for M =1:19
     
     
     if cross_lines
-      save(['/cresis/snfs1/scratch/manjish/cross_lines' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/peterman/crossline' num2str(M,'%d') '.mat'],'r');
     else
-      save(['/cresis/snfs1/scratch/manjish/' num2str(M,'%03d') '.mat'],'r');
+      save(['/cresis/snfs1/scratch/manjish/peterman/verticalline' num2str(M,'%03d') '.mat'],'r');
     end
     clearvars r K
     
