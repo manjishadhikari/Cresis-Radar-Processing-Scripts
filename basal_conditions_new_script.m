@@ -2,6 +2,7 @@
 %  Fit Na and DN for every 1 km
 %{
 from englacial_att_method1
+jacobshavnn
 median_power =
     8.8886
 mean_power =
@@ -10,6 +11,19 @@ max_power =
    66.3854
 avg_depth =
    1505
+na=-15.43
+
+%%Jacobshavn
+median_power =
+    3.1466
+mean_power =
+  -46.0867
+max_power =
+   57.2095
+avg_depth =
+   1.1496e+03
+Na =
+  -21.8052
 %}
 
 %% setup
@@ -35,19 +49,19 @@ v_ref=[];
 
 disp('Englacial Attn Method 2')
 for iter=1
-  for M =1:20
+  for M =1:61
     
     % clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
     clc
     param.radar.fc = 195000000;  %Center Frequency
-    if M<21
+    if M<26
       cross_lines = 1;
       M1=0;
-      load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/crossline',num2str(M)]);
+      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline',num2str(M)]);
     else
-      M1=M-20;
+      M1=M-25;
       cross_lines = 0;
-      load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline',num2str(M1)]);
+      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline',num2str(M1)]);
     end
     physical_constants
     %%
@@ -63,6 +77,7 @@ for iter=1
       figure(2); plot( lp(Greenland.ice_bed_power));
       grid on; title('Along Track vs Power')
       
+      %Location
       if 0
         geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
         proj = geotiffinfo(geotiff_fn);
@@ -74,10 +89,10 @@ for iter=1
         mapshow(rgb2gray(A),CMAP/1e3);
         xlabel('X (km)');
         ylabel('Y (km)');
-        xlim([-350 -50]);
-        ylim([-1250 -900]);
-        %  xlim([-350 -50]);
-        %ylim([-2450 -2150]);
+        %xlim([-350 -50]);
+        %ylim([-1250 -900]);
+          xlim([-350 -50]);
+        ylim([-2450 -2150]);
         
         hold on
         clear gps.x gps.y
@@ -113,13 +128,14 @@ for iter=1
     Greenland.roll=Greenland.Roll*180/pi;   %Roll in degrees
     
     if ~isempty(find(isnan(Greenland.ice_bed_power),1))
-      disp(sprintf('%d Nan values found for bed power \n',length(find(isnan(Greenland.ice_bed_power),1))))
+      disp(sprintf('%d Nan values found for bed power \n',length(find(isnan(Greenland.ice_bed_power)))))
     end
     
     %% compensating reflected bed power for surface roughness
     settings.num_int=1000;
     settings.repeat_after=10;
     settings.type='surface';
+    settings.cross_lines=cross_lines;
     settings.M=M;
     settings.M1=M1;
     % [Greenland,sf_rms]=surf_roughness(Greenland,num_int,repeat_after);
@@ -205,14 +221,15 @@ for iter=1
     
     %% attenuation_fitting
     %reference_power = 25 ;
-    Greenland.reference_power = nanmean((Greenland.ice_bed_power_cgl));
+  %  Greenland.reference_power = nanmean((Greenland.ice_bed_power_cgl));
+     Greenland.reference_power =-46;
     %reference_power=-15;
     Greenland.relative_ice_bed_power_G_r_corrected = (Greenland.ice_bed_power_cgl)-Greenland.reference_power;
     
     %relative_ice_bed_power_G_r_corrected= relative_ice_bed_power_G_r_corrected-mean(relative_ice_bed_power_G_r_corrected);
     Greenland.depth_avg = Greenland.depth_avg/1000;
-    Greenland.relative_depth = nanmean( Greenland.depth_avg);
-    %   relative_depth = nanmean(isfinite(Greenland.depth_avg));
+   % Greenland.relative_depth = nanmean( Greenland.depth_avg);
+    Greenland.relative_depth =1.1496;
     % relative_depth =1.505;
     % relative_depth=1.6033;
     if plots
@@ -308,12 +325,12 @@ for iter=1
     if ~isempty(nanidx)
       constant_att=zeros(1,size(Greenland.ice_bed_power_cgl,2));
       var_att=zeros(1,size(Greenland.ice_bed_power_cgl,2));
-      const_att(nanidx)=nan;
+      constant_att(nanidx)=nan;
       var_att(nanidx)=nan;
-      const_att(notnanidx)=const_attenuation;
-      var_att(notnanidx)=var_attenuation;
-      const_attenuation=const_att;
-      var_attenuation=var_att;
+      constant_att(notnanidx)=Attenuation.const_attenuation;
+      var_att(notnanidx)=Attenuation.var_attenuation;
+      Attenuation.const_attenuation=constant_att;
+      Attenuation.var_attenuation=var_att;
     end
     
     constant_attenuation =  cat(2,constant_attenuation, Attenuation.const_attenuation);
@@ -385,6 +402,9 @@ if 1
   %xlim([350 650]);
   %ylim([-1000 -600]);
   
+    xlim([-350 -50]);
+        ylim([-2450 -2150]);
+        
   hold on
   clear gps.x gps.y
   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
@@ -410,6 +430,8 @@ if 1
   %xlim([350 650]);
   %ylim([-1000 -600]);
   
+    xlim([-350 -50]);
+        ylim([-2450 -2150]);
   hold on
   clear gps.x gps.y
   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
@@ -436,6 +458,8 @@ if 1
   %xlim([350 650]);
   %ylim([-1000 -600]);
   
+    xlim([-350 -50]);
+        ylim([-2450 -2150]);
   hold on
   clear gps.x gps.y
   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
@@ -453,9 +477,11 @@ if 1
   mapshow(rgb2gray(A),CMAP/1e3);
   xlabel('X (km)');
   ylabel('Y (km)');
-  %xlim([350 650]);
+ %xlim([350 650]);
   %ylim([-1000 -600]);
   
+    xlim([-350 -50]);
+        ylim([-2450 -2150]);
   hold on
   clear gps.x gps.y
   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
@@ -487,4 +513,19 @@ if 1
   %   %caxis([-15 15])
   %   colorbar;
   %   title('Value of DN ')
+end
+
+save_ref_en=0;
+if save_ref_en
+
+  out.Latitude=lat_G_r_corrected;
+  out.Longitude=lon_G_r_corrected;
+  out.const_attenuation=constant_attenuation;
+  out.var_attenuation=variable_attenuation;
+  out.Depth=depth_G_r_corrected;
+  out.Refl_const=c_ref;
+  out.Refl_var=v_ref;
+  
+  save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity.mat'],'out')
+  
 end

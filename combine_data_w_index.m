@@ -2,8 +2,8 @@ clear
 close
 clc
 param.radar.fc = 195e6;
-physical_constants
-debug_flag=1;
+physical_constants;
+debug_flag=0;
 
 Greenland.GPS_time = [];
 Greenland.Latitude = [];
@@ -27,17 +27,15 @@ Greenland.ice_bed_power_cgl = [];
     lst=[];
 fprintf('Combining all radar lines..\n')
     
-for M =1:40
-  if M<21
-   tmp=load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline', sprintf('%d.mat',M)]);
+for M =1:25
+  if M<26
+   tmp=load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline', sprintf('%d.mat',M)]);
   else
-     N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline', sprintf('%d.mat',N)]);
+     N=M-25;
+    tmp= load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline', sprintf('%d.mat',N)]);
   end
   tmp.Greenland.depth =(-tmp.Greenland.surface_time+tmp.Greenland.ice_bed_time).*3*10^8/(2*sqrt(er_ice));
-  
   tmp.Greenland.surface_height = (tmp.Greenland.surface_time)*c/2;
-  
   tmp.geometric_loss = (2*(tmp.Greenland.surface_height+tmp.Greenland.depth/sqrt(er_ice))).^2;
   tmp.geometric_loss_surface = (2*(tmp.Greenland.surface_height)).^2;
   tmp.Greenland.ice_bed_power_cgl =(tmp.Greenland.ice_bed_power).*tmp.geometric_loss;
@@ -50,45 +48,45 @@ for M =1:40
        figure;plot(tmp.Greenland.depth, lp(tmp.geometric_loss))
   end
    
-  if M<21
-   load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/crossline', sprintf('%d.mat',M)]);
-  else
-     N=M-20;
-     load(['/cresis/snfs1/scratch/manjish/peterman/radarnew/verticalline', sprintf('%d.mat',N)]);
-  end
-  % load(['/cresis/snfs1/scratch/santhosh/thesis/get heights frames Greenland/surface_roughness_v6_' num2str(k,'%03d') '.mat'])
-  K  = floor(length(tmp.Greenland.ice_bed_power_cgl)/1000);
-  for l = 1:K
-    tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)) = (tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)))./(exp(-(4*pi*r.rms_height(l)/(c/param.radar.fs))^2)*(besseli(0,((4*pi*r.rms_height(l)/(c/param.radar.fs))^2)/2))^2);
-  end
-  clear r
-  
-   if debug_flag
-  figure(100);hold on;plot(lp( tmp.Greenland.ice_bed_power_cgl))
-  power_sf_corr=lp( tmp.Greenland.ice_bed_power_cgl);
-  end
-  
- if M<21
-   load(['/cresis/snfs1/scratch/manjish/peterman/bedroughness/crossline', sprintf('%d.mat',M)]);
- else
-    N=M-20;
-     load(['/cresis/snfs1/scratch/manjish/peterman/bedroughness/verticalline', sprintf('%d.mat',N)]);
- end
- r=rbed;
- K  = floor(length(tmp.Greenland.ice_bed_power_cgl)/1000);
-  for l = 1:K
-    tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)) = (tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)))./(exp(-(4*pi*r.rms_height(l)/(c/param.radar.fs*sqrt(er_ice)))^2)*(besseli(0,((4*pi*r.rms_height(l)/(c/param.radar.fs*sqrt(er_ice)))^2)/2))^2);
-  end
-  clear r
+%   if M<21
+%    load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline', sprintf('%d.mat',M)]);
+%   else
+%      N=M-20;
+%      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline', sprintf('%d.mat',N)]);
+%   end
+%   % load(['/cresis/snfs1/scratch/santhosh/thesis/get heights frames Greenland/surface_roughness_v6_' num2str(k,'%03d') '.mat'])
+%   K  = floor(length(tmp.Greenland.ice_bed_power_cgl)/1000);
+%   for l = 1:K
+%     tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)) = (tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)))./(exp(-(4*pi*r.rms_height(l)/(c/param.radar.fs)*(sqrt(er_ice)-1))^2)*(besseli(0,((4*pi*r.rms_height(l)/(c/param.radar.fs)*(sqrt(er_ice)-1))^2)/2))^2);
+%   end
+%   clear r
+%   
+%    if debug_flag
+%   figure(100);hold on;plot(lp( tmp.Greenland.ice_bed_power_cgl))
+%   power_sf_corr=lp( tmp.Greenland.ice_bed_power_cgl);
+%   end
+%   
+%  if M<21
+%    load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bedroughness/crossline', sprintf('%d.mat',M)]);
+%  else
+%     N=M-20;
+%      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bedroughness/verticalline', sprintf('%d.mat',N)]);
+%  end
+%  r=rbed;
+%  K  = floor(length(tmp.Greenland.ice_bed_power_cgl)/1000);
+%   for l = 1:K
+%     tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)) = (tmp.Greenland.ice_bed_power_cgl(1+(l-1)*1000:(l*1000)))./(exp(-(4*pi*r.rms_height(l)/(c/param.radar.fs*sqrt(er_ice)))^2)*(besseli(0,((4*pi*r.rms_height(l)/(c/param.radar.fs*sqrt(er_ice)))^2)/2))^2);
+%   end
+%   clear r
   
    
-  if debug_flag
-  figure(100);hold on; plot(lp( tmp.Greenland.ice_bed_power_cgl))
-  legend('Original','Sf Roughness Corrected','Bed Roughness Corrected')
-   power_bed_corr=lp( tmp.Greenland.ice_bed_power_cgl);
-   figure(101);plot(power_bed_corr-power_sf_corr);title('Bed Roughness Correction values')
-    figure(102);plot(power_bed_corr-power_original);title('Original minus Roughness Corrected Power')
-  end
+%   if debug_flag
+%   figure(100);hold on; plot(lp( tmp.Greenland.ice_bed_power_cgl))
+%   legend('Original','Sf Roughness Corrected','Bed Roughness Corrected')
+%    power_bed_corr=lp( tmp.Greenland.ice_bed_power_cgl);
+%    figure(101);plot(power_bed_corr-power_sf_corr);title('Bed Roughness Correction values')
+%     figure(102);plot(power_bed_corr-power_original);title('Original minus Roughness Corrected Power')
+%   end
   
   Greenland.GPS_time = cat(2,Greenland.GPS_time, tmp.Greenland.GPS_time);
   Greenland.Latitude = cat(2,Greenland.Latitude, tmp.Greenland.Latitude);
@@ -118,7 +116,7 @@ for M =1:40
   end
   
 end
-out_fn=['/cresis/snfs1/scratch/manjish/peterman/', sprintf('completedata_w_idx.mat')];
+out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/', sprintf('crossdata_w_idx.mat')];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);

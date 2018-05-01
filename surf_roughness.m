@@ -1,26 +1,27 @@
  
 
 function [Greenland,sf_rms,sf_corr_power,orig_avg_power]=surf_roughness(Greenland,settings)
-M=21;
-M1=1;
+M=settings.M;
+M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
 file_exist = false;
     if M<21
-      if exist((  (['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline',num2str(M),'.mat'])),'file')
-        load(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline',num2str(M),'.mat']);
+      if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline',num2str(M),'.mat'])),'file')
+        load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline',num2str(M),'.mat']);
         file_exist = true;
       end
     else
       
-      if exist((  (['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline',num2str(M1),'.mat'])),'file')
-        load(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline',num2str(M1),'.mat']);
+      if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline',num2str(M1),'.mat'])),'file')
+        load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline',num2str(M1),'.mat']);
         file_exist = true;
       end
     end
     
    
     if ~file_exist
+      settings.save_en=1;
       [r]=roughness_calculation(Greenland,settings);
     end
       k = 1;

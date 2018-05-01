@@ -266,7 +266,7 @@ end
     data = load(data_fn);
     tmp = load(layer_fn);
     
- 
+ if 1
     surface_twtt=interp1(tmp.GPS_time,tmp.layerData{1}.value{2}.data , data.GPS_time,'linear','extrap');
     surface_twtt(isinf(surface_twtt))=nan;
     
@@ -378,6 +378,7 @@ end
       title(sprintf('Data-%s-%03d.mat', param1.day_seg, frm))
     end
     
+ end
    
     %Save figure as jpg for checking
    
@@ -388,7 +389,7 @@ end
         figure(2);imagesc([],data.Time*1e6,lp(data.Data));
         figure(2);hold on; plot(surface_twtt*1e6);
         figure(2);hold on; plot(bottom_twtt*1e6);
-        title(sprintf('Data-%s-%03d.mat', param1.day_seg, frm))
+        title(sprintf('Data-%s-%03d_echo.mat', param1.day_seg, frm))
       end
       
       if cross_lines
@@ -774,12 +775,12 @@ end
         ax = gca;
         ax.YDir = 'normal';
         hold on;plot(data.sf_elev_new,'--');plot(data.bt_elev_new,'--');
-      end
+     
        figure(2);imagesc([],data.Time*1e6,lp(data.Data));
       figure(2);hold on; plot(surface_twtt*1e6);
       figure(2);hold on; plot(bottom_twtt*1e6);
       title(sprintf('Data-%s-%03d.mat', param1.day_seg, frm))
-      
+       end
       %
       % Truncate data around ice bottom within bt.range_bins
       bt_range_bins =[-50:100];
@@ -1206,7 +1207,7 @@ end
     if Peterman
      save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
     else
-      save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline' num2str(k,'%d') '.mat'],'Greenland');
+      save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
  
     end
   else
@@ -1214,7 +1215,7 @@ end
     if Peterman
         save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
     else
-        save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
  
     end
     end

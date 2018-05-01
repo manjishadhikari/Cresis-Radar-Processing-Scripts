@@ -33,8 +33,8 @@ variable_attenuation=[];
 
 
 disp('Englacial Attn Method 2')
-for iter=1:4
-  for M =21
+for iter=1:10
+  for M =27
     
     % clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
     clc
@@ -62,6 +62,7 @@ for iter=1:4
       figure(2); plot( lp(Greenland.ice_bed_power));
       grid on; title('Along Track vs Power')
       
+      if iter==1
       if 0
         geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
         proj = geotiffinfo(geotiff_fn);
@@ -94,7 +95,7 @@ for iter=1:4
         keyboard
         close
       end
-      
+      end
       
     end
     
@@ -112,13 +113,14 @@ for iter=1:4
     Greenland.roll=Greenland.Roll*180/pi;   %Roll in degrees
     
     if ~isempty(find(isnan(Greenland.ice_bed_power),1))
-      disp(sprintf('%d Nan values found for bed power \n',length(find(isnan(Greenland.ice_bed_power),1))))
+      disp(sprintf('%d Nan values found for bed power \n',length(find(isnan(Greenland.ice_bed_power)))))
     end
     
     %% compensating reflected bed power for surface roughness
     settings.num_int=1000;
     settings.repeat_after=10;
     settings.type='surface';
+    settings.cross_lines=cross_lines;
     settings.M=M;
     settings.M1=M1;
     % [Greenland,sf_rms]=surf_roughness(Greenland,num_int,repeat_after);
@@ -142,12 +144,15 @@ for iter=1:4
     settings.iter=iter;
     if settings.iter>1
       figure(201); subplot(2,1,1); plot(lp(Greenland.ice_bed_power_avg));
-      Greenland.ice_bed_power_avg=Greenland.ice_bed_power_avg.*(10.^(Attenuation.const_attenuation/10));
+    %  Greenland.ice_bed_power_avg=Greenland.ice_bed_power_avg.*(10.^(Attenuation.const_attenuation/10));
+     Greenland.ice_bed_power_avg=Greenland.ice_bed_power_avg.*(10.^(Attenuation.var_attenuation/10));
       figure(201); subplot(2,1,1);hold on; plot(lp(Greenland.ice_bed_power_avg));
       legend('Before const attn','After const attn')
-      figure(201); hold on;subplot(2,1,2); hold on; plot(Attenuation.const_attenuation);
-      
+%      figure(201); hold on;subplot(2,1,2); hold on; plot(Attenuation.const_attenuation);title('Const Attenaution')
+      figure(201); hold on;subplot(2,1,2); hold on; plot(Attenuation.var_attenuation);title('Variable Attenaution')
       [Greenland,bed_rms,bed_corr_power]=bed_roughness(Greenland,settings);
+      bed_rms_iter{iter}=bed_rms;
+      bed_corr_power_iter{iter}=bed_corr_power;
     end
     if plots
       figure(3);subplot(3,1,1)
@@ -239,9 +244,15 @@ for iter=1:4
     nanidx=(find(isnan(Greenland.relative_ice_bed_power_G_r_corrected)));
     %  nanidx2=find(isnan(power_filtered_short));
     % nanidx=unique([nanidx1 nanidx2]);
-    test=zeros(1,length(Greenland.relative_ice_bed_power_G_r_corrected));
-    test(nanidx)=nan;
-    notnanidx=find(~isnan(test));
+    temp=zeros(1,length(Greenland.relative_ice_bed_power_G_r_corrected));
+    temp(nanidx)=nan;
+    notnanidx=find(~isnan(temp));
+    
+    Greenland.depth_f=Greenland.depth_avg;
+    Greenland.Lat_f=Greenland.Latitude_avg;
+    Greenland.Lon_f=Greenland.Longitude_avg;
+    Greenland.along_track_f=Greenland.along_track_avg;
+    Greenland.geom_loss_f= Greenland.geometric_loss_avg;
     
     %notnanidx=find(power_filtered_long(~nanidx));
     Greenland.relative_ice_bed_power_G_r_corrected(nanidx)=[];
@@ -252,7 +263,7 @@ for iter=1:4
     Greenland.along_track_avg(nanidx)=[];
     Greenland.geometric_loss_avg(nanidx)=[];
     
-    
+  
     
     if iter<5
       power_filtered_long=sgolayfilt(Greenland.relative_ice_bed_power_G_r_corrected,2,window1,gausswin(window1));
@@ -269,7 +280,7 @@ for iter=1:4
       legend('filtered','original'); title('short filter')
     end
     
-    
+      power_long{iter}=power_filtered_long;
     
     
     
@@ -290,27 +301,34 @@ for iter=1:4
     end
     
     %Method 1 fit Na and DN for evry 1 km
-    [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short);
+   %[Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short);
     
     %%Method 2 use Na from 1 and fit DN
-    %  [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_short);
+      [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_short);
     
     %% Attenuation calculation
     if plots
       figure;plot(Attenuation.const_attenuation);title('Const Attenuation')
       figure;plot(Attenuation.var_attenuation); title('Var attenuation')
       figure;plot(Greenland.depth); title('Depth')
+      figure;plot(Attenuation.estimated_dn); title('Estimated DN')
+      figure;plot(Attenuation.estimated_na); title('Estimated NA')
+        figure;plot(Attenuation.mod_na); title('Modified NA')
     end
     
     if ~isempty(nanidx)
-      constant_att=zeros(1,size(Greenland.ice_bed_power_cgl,2));
+      const_att=zeros(1,size(Greenland.ice_bed_power_cgl,2));
+      power_g_r_corr=zeros(1,size(Greenland.ice_bed_power_cgl,2));
       var_att=zeros(1,size(Greenland.ice_bed_power_cgl,2));
       const_att(nanidx)=nan;
       var_att(nanidx)=nan;
-      const_att(notnanidx)=const_attenuation;
-      var_att(notnanidx)=var_attenuation;
-      const_attenuation=const_att;
-      var_attenuation=var_att;
+      power_g_r_corr(nanidx)=nan;
+      const_att(notnanidx)=Attenuation.const_attenuation;
+      var_att(notnanidx)=Attenuation.var_attenuation;
+      power_g_r_corr(notnanidx)=Greenland.relative_ice_bed_power_G_r_corrected;
+      Attenuation.const_attenuation=const_att;
+      Attenuation.var_attenuation=var_att;
+      Greenland.relative_ice_bed_power_G_r_corrected=power_g_r_corr;
     end
     
     constant_attenuation =  cat(2,constant_attenuation, Attenuation.const_attenuation);
@@ -321,8 +339,8 @@ for iter=1:4
     
     
     if plots
-      ref=Greenland.ice_bed_power_cgl-nanmean(Greenland.ice_bed_power_cgl)+Attenuation.const_attenuation;
-      ref2=Greenland.ice_bed_power_cgl-nanmean(Greenland.ice_bed_power_cgl)+Attenuation.var_attenuation;
+      ref=Greenland.relative_ice_bed_power_G_r_corrected+Attenuation.const_attenuation;
+      ref2=Greenland.relative_ice_bed_power_G_r_corrected+Attenuation.var_attenuation;
       figure;plot(ref);title('Reflectivity using const Na')
       figure;histogram(ref);title('Reflectivity using const Na')
       figure;plot(ref2);title('Reflectivity using var Na')
@@ -340,7 +358,7 @@ for iter=1:4
 end
 
 
-for i=1:iter
+for i=2:iter
   
   figure(10000);hold on; plot(const_att_iter{i});title('Const Attn')
   figure(10001);hold on; plot(var_att_iter{i});title('Var Attn')
@@ -348,11 +366,20 @@ for i=1:iter
   figure(10003);hold on; plot(v_ref{i});title('Reflectivity using var Na')
   
 end
-figure(10004); histogram(c_ref{i});title('Iter 3 consta att')
-figure(10005); histogram(v_ref{i});title('Iter 3 const att')
-figure;(10006); histogram(c_ref{1}); title('Iter 1 const att')
+
+figure(10000);legend('2','3','4','5');
+figure(10001);legend('2','3','4','5');
+figure(10002);legend('2','3','4','5');
+figure(10003);legend('2','3','4','5');
+figure(10004); histogram(c_ref{i});title('Iter 5 ref')
+%figure(10005); histogram(v_ref{i});title('Iter 3 ref')
+figure;(10006); histogram(c_ref{2}); title('Iter 1 ref')
 
 keyboard
+
+
+
+
 if 1
   depth_G_r_corrected = depth_G_r_corrected / 1000;
   

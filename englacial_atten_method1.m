@@ -6,7 +6,7 @@ dbstop error
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-    out_fn=['/cresis/snfs1/scratch/manjish//peterman/completedata_w_idx.mat'];
+    out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/verticaldata_w_idx.mat'];
     load(out_fn);
 end
 physical_constants
@@ -89,7 +89,7 @@ Greenland.ice_bed_power_cgl_sorted(idx) = [];
 Greenland.depth_sorted (idx)= [];
 
 %Mean -141 for 20110429_01_028
-Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./max(Greenland.ice_bed_power_cgl_sorted);
+Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./mean(Greenland.ice_bed_power_cgl_sorted);
 if plots
     figure(6);plot(Greenland.depth_sorted, lp((Greenland.ice_bed_power_rgl_sorted)));
     grid on
@@ -101,11 +101,12 @@ max_power=max(lp(Greenland.ice_bed_power_cgl_sorted))
 avg_depth = mean(Greenland.depth_sorted)     %1.6033 km
 
 
-[r,m,b]=regression(Greenland.depth_sorted, lp((Greenland.ice_bed_power_rgl_sorted)));
-val=m*Greenland.depth+b;
-figure(6); hold on; plot(Greenland.depth,val);
+[r,m,b]=regression(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),lp((Greenland.ice_bed_power_rgl_sorted)));
+val=m*(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)))+b;
+figure(60); plot(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),lp((Greenland.ice_bed_power_rgl_sorted)));
+figure(60); hold on; plot(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),val);
 %Na=10^3*10*log10(exp(1))/m; %
-Na=(val(end)-val(1))/(Greenland.depth(end)-Greenland.depth(1))*1000    %One way depth averaged attenuation rate
+Na=(val(end)-val(1))/(Greenland.depth_sorted(end)-Greenland.depth_sorted(1))*1000    %One way depth averaged attenuation rate
 
 ice_bed_reflectivity=lp(Greenland.ice_bed_power_rgl_sorted)+2*Na*(Greenland.depth_sorted-avg_depth)/1000;
 figure;histogram(ice_bed_reflectivity);
@@ -143,7 +144,7 @@ hold on;
 
 
 scatter(gps.x,gps.y,20,ice_bed_refl,'fill')
-caxis([-15 15])
+caxis([-40 40])
 colorbar;
 title('Reflectivity using constant na ')
 

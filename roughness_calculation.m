@@ -1,24 +1,25 @@
 
 function [r]=roughness_calculation(Greenland,settings)
-M=21;
-M1=1;
+M=settings.M;
+M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
 num_int=settings.num_int;  % ~210 metres
 repeat_after=settings.repeat_after;
-cross_lines=0;
+cross_lines=settings.cross_lines;
 
 if strcmp(settings.type,'surface')
   power=Greenland.ice_surface_power;
 else
-  power=Greenland.ice_bed_power;
+  power=Greenland.ice_bed_power_avg;
 end
 k=1;
 for l = num_int/2:repeat_after:length(power)
   if ((l >= num_int/2) && ((l+num_int/2) < length(power)))
+    
+    r.lat(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
+    r.lon(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
     if all(abs(Greenland.roll((l-num_int/2+1):(l+num_int/2)))<5)
-      r.lat(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
-      r.lon(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
       s = abs(power((l-num_int/2+1):(l+num_int/2)));
       id = find(isnan(s)|isinf(s)|s==0);
       if length(id) > num_int/2
@@ -118,82 +119,85 @@ for l = num_int/2:repeat_after:length(power)
       end
       
       
-%       if any(~isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))))
-%         ice_bed_power = Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2));
-%         depth = Greenland.depth((l-num_int/2+1):(l+num_int/2));
-%         clear id
-%         id = find(isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))));
-%         ice_bed_power(id) = [];
-%         depth(id) = [];
-%         Greenland.ice_bed_power_avg(k) =   nanmean(ice_bed_power) ;
-%         Greenland.depth_avg(k) = nanmean(depth);
-%         Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
-%         Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
-%         orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
-%         
-%         
-%       else
-%         Greenland.ice_bed_power_avg(k) = nan;
-%         Greenland.depth_avg(k) = nanmean(depth);
-%         Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
-%         Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
-%         Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
-%         orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
-%       end
+      %       if any(~isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))))
+      %         ice_bed_power = Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2));
+      %         depth = Greenland.depth((l-num_int/2+1):(l+num_int/2));
+      %         clear id
+      %         id = find(isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))));
+      %         ice_bed_power(id) = [];
+      %         depth(id) = [];
+      %         Greenland.ice_bed_power_avg(k) =   nanmean(ice_bed_power) ;
+      %         Greenland.depth_avg(k) = nanmean(depth);
+      %         Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
+      %         Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
+      %         orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
+      %
+      %
+      %       else
+      %         Greenland.ice_bed_power_avg(k) = nan;
+      %         Greenland.depth_avg(k) = nanmean(depth);
+      %         Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
+      %         Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
+      %         Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
+      %         orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
+      %       end
       
       if isnan(r.rms_height(k))
         k = k+1;
         continue;
       else
-%         sf_corr_power(k)=(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)/2))^2);
-%         
-%         Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k).*(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)/2))^2);
-%         
+        %         sf_corr_power(k)=(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)/2))^2);
+        %
+        %         Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k).*(exp(-((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)*(besseli(0,(((4*pi*r.rms_height(k)/(c/param.radar.fc))*(sqrt(er_ice)-1))^2)/2))^2);
+        %
       end
     else
-%       Greenland.ice_bed_power_avg(k) = nan;
-%       Greenland.depth_avg(k) = nanmean(Greenland.depth);
-%       Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
-%       Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
-%       Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
-%       Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
-%       Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
-%       orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
-%       r.lat(k)= Greenland.Latitude_avg(k);
-%       r.lon(k)= Greenland.Longitude_avg(k);
-%       r.dielectric_constant(k)=nan;
+      %       Greenland.ice_bed_power_avg(k) = nan;
+      %       Greenland.depth_avg(k) = nanmean(Greenland.depth);
+      %       Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
+      %       Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
+      %       Greenland.along_track_avg(k) = nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
+      %       Greenland.geometric_loss_avg(k) = nanmean(geometric_loss((l-num_int/2+1):(l+num_int/2)));
+      %       Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
+      %       orig_avg_power(k)=Greenland.ice_bed_power_avg(k); %Original power for comparison
+      %       r.lat(k)= Greenland.Latitude_avg(k);
+      %       r.lon(k)= Greenland.Longitude_avg(k);
+      r.dielectric_constant(k)=nan;
       r.rms_height(k)=nan;
-%       r.pc(k)=nan;
-%       r.pn(k)=nan;
-%       r.settings.num_int=num_int;
-%       r.settings.repeat_after=repeat_after;
+      r.pc(k)=nan;
+      r.pn(k)=nan;
+      %       r.settings.num_int=num_int;
+      %       r.settings.repeat_after=repeat_after;
+      
     end
     k= k+1;
   end
-
+  
 end
 
 r.num_int=num_int;
 r.repeat_after=repeat_after;
 
-disp('Saving surface roughness values')
-
-if strcmp(settings.type,'surface')
-  if cross_lines
-    save(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline' num2str(M1,'%d') '.mat'],'r');
-  else
-    save(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
-  end
-elseif strcmp(settings.type,'bed')
-  if cross_lines
-    save(['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/crossline' num2str(M1,'%d') '.mat'],'r');
-  else
-    save(['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+if settings.save_en
+  disp('Saving surface roughness values')
+  
+  if strcmp(settings.type,'surface')
+    if cross_lines
+      save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
+    else
+      save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+    end
+  elseif strcmp(settings.type,'bed')
+    if cross_lines
+      save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/crossline' num2str(M,'%d') '.mat'],'r');
+    else
+      save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+    end
   end
 end
 end

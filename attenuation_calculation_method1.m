@@ -20,23 +20,33 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
         if length(id) < 1
           continue;
         else
-          Na = 0:0.05:20;    %filter before finding Na???
+%           Na = 0:0.05:20;    %filter before finding Na???
+%           
+%           for  j = 1:length(Na)
+%             %         plot(-relative_ice_bed_power_G_r_corrected, '*')% apparent attenuation
+%             %         hold on
+%             %         plot(2*Na(j)*(Greenland.depth_avg-relative_depth), '*')
+%             mse(j) = mean((-power_filtered_long(id)- 2*Na(j)*(Greenland.depth_avg(id)-Greenland.relative_depth)).^2);
+%             %  keyboard
+%             %             grid
+%             %             hold off
+%           end
+%           [constant_attenuation_mse, index] = min(mse);
+%           Na_bar  = Na(index);
           
-          for  j = 1:length(Na)
-            %         plot(-relative_ice_bed_power_G_r_corrected, '*')% apparent attenuation
-            %         hold on
-            %         plot(2*Na(j)*(Greenland.depth_avg-relative_depth), '*')
-            mse(j) = mean((-power_filtered_long(id)- 2*Na(j)*(Greenland.depth_avg(id)-Greenland.relative_depth)).^2);
-            %  keyboard
-            %             grid
-            %             hold off
+          %test
+          [r,Na_bar,b]=regression(-2*(Greenland.depth_avg(id)-Greenland.relative_depth),power_filtered_long(id));
+          if 0
+            
+            figure;plot(-2*(Greenland.depth_avg(id)-Greenland.relative_depth),power_filtered_long(id));
+         
           end
-          [constant_attenuation_mse, index] = min(mse);
-          Na_bar  = Na(index);
+          
+          
         end
         %   Na_bar=11;
         
-        dn = (-5:0.01:5);   %Filter before finding DN????
+        dn = (-25:0.01:25);   %Filter before finding DN????
         for j = 1:length(dn)
           
           term_1 = 2*dn(j).*((Greenland.depth_avg(id)-Greenland.relative_depth)).*((along_track(id)-mean(along_track(id))));
@@ -66,6 +76,7 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
         %             modified_atteanuation(id) = 2.*variable_attenuation_scale.*Greenland.attenuation_constant(id).*(Greenland.depth_avg(id)-relative_depth);
         const_attenuation(id) = 2.*Na_bar.*(Greenland.depth_avg(id)-Greenland.relative_depth);
         estimated_na(id) = Na_bar;
+        mod_na(id)=Na_bar+2*DN*((along_track(id)-mean(along_track(id))));
         estimated_dn(id)=DN;
         
         var_attenuation(id)=const_attenuation(id)+ 2*DN.*((Greenland.depth_avg(id)-Greenland.relative_depth)).*((along_track(id)-mean(along_track(id))));
@@ -87,4 +98,5 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
     Attenuation.var_attenuation=var_attenuation;
     Attenuation.estimated_na=estimated_na;
     Attenuation.estimated_dn=estimated_dn;
+    Attenuation.mod_na=mod_na;
 end
