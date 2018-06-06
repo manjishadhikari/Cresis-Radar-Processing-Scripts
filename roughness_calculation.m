@@ -185,8 +185,24 @@ r.repeat_after=repeat_after;
 
 if settings.save_en
   disp('Saving surface roughness values')
-  
-  if strcmp(settings.type,'surface')
+  if strcmp(settings.location,'Peterman')
+ 
+     if strcmp(settings.type,'surface')
+    if cross_lines
+      save(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
+    else
+      save(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+    end
+  elseif strcmp(settings.type,'bed')
+    if cross_lines
+      save(['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/crossline' num2str(M,'%d') '.mat'],'r');
+    else
+      save(['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+    end
+    end
+    
+  elseif strcmp(settings.location,'Jacobshavn')
+    if strcmp(settings.type,'surface')
     if cross_lines
       save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
     else
@@ -197,6 +213,7 @@ if settings.save_en
       save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/crossline' num2str(M,'%d') '.mat'],'r');
     else
       save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+    end
     end
   end
 end

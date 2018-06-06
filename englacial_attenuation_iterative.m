@@ -33,7 +33,7 @@ variable_attenuation=[];
 
 
 disp('Englacial Attn Method 2')
-for iter=1:10
+for iter=1:5
   for M =27
     
     % clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation

@@ -6,16 +6,30 @@ M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
 file_exist = false;
-    if M<21
+    if settings.cross_lines==1
+      if strcmp(settings.location,'Jacobshavn')
       if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline',num2str(M),'.mat'])),'file')
         load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline',num2str(M),'.mat']);
         file_exist = true;
       end
-    else
+      elseif strcmp(settings.location,'Peterman')
+        if exist((  (['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline',num2str(M),'.mat'])),'file')
+        load(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/crossline',num2str(M),'.mat']);
+        file_exist = true;
+      end
+      end
       
+    else
+      if strcmp(settings.location,'Jacobshavn')
       if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline',num2str(M1),'.mat'])),'file')
         load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline',num2str(M1),'.mat']);
         file_exist = true;
+      end
+      elseif strcmp(settings.location,'Peterman')
+        if exist((  (['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline',num2str(M1),'.mat'])),'file')
+        load(['/cresis/snfs1/scratch/manjish/new_peterman/surface_roughness/verticalline',num2str(M1),'.mat']);
+        file_exist = true;
+      end
       end
     end
     

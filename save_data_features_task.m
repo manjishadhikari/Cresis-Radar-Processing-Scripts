@@ -338,7 +338,7 @@ end
                       idx2=size(data.Data,1);
                       idx1=idx2-300;
                     end
-                    N = mean((data.Data(idx1:idx2,i)));  %Noise floor
+                    N = mean(lp(data.Data(idx1:idx2,i)));  %Noise floor
                  
                     % Put condition for: if bottom is equal to surface,
                     % reject it as bottom as surface power creates false
@@ -351,7 +351,7 @@ end
                         continue ;
                     end
                     
-                    SNR=bed_power-lp(N);
+                    SNR=bed_power-(N);
                     if SNR > 3
                         ice_bed_power(i) = data.Data(bed_index,i);
                         bottom_twtt(i) =  interp1([1:length(data.Time)],data.Time,bed_index);
