@@ -6,7 +6,7 @@ M=settings.M;
 M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
-er_bed=6;
+er_bed=6;   %Set to 6 assuming rock 
 
 if settings.cross_lines==1
   if strcmp(settings.location,'Jacobshavn')

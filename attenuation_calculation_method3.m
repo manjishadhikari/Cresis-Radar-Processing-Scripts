@@ -1,9 +1,9 @@
  
-function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short)
+function [Attenuation]=attenuation_calculation_method3(Greenland,power_filtered_short,Na_bar)
 
 %% Attenuation calculation
     
-    %Method 1 fit Na and DN for evry 1 km
+    %Method  DN for evry 1 km and take Na from overall
     if 1
       along_track = geodetic_to_along_track(Greenland.Latitude_avg_filt,Greenland.Longitude_avg_filt);
       along_track = along_track/1000;
@@ -21,21 +21,7 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
         if length(id) < 1
           continue;
         else
-          
-          Na = -25:0.05:25;    %Least Mean Square Error Method
-          
-          for  j = 1:length(Na)
-            %         plot(-relative_ice_bed_power_G_r_corrected, '*')% apparent attenuation
-            %         hold on
-            %         plot(2*Na(j)*(Greenland.depth_avg-relative_depth), '*')
-            mse(j) = mean((power_filtered_long(id)+ 2*Na(j)*(Greenland.depth_avg_filt(id)-Greenland.relative_depth)).^2);
-            %  keyboard
-            %             grid
-            %             hold off
-          end
-          [~, index] = min(mse);
-          Na_bar  = Na(index);
-         
+        
           
           %test
 %           [r,Na_bar2,b]=regression(-2*(Greenland.depth_avg(id)-Greenland.relative_depth),power_filtered_long(id));
@@ -48,7 +34,7 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
         %   Na_bar=11;
       
       
-        dn = (0:0.01:25);   %Filter before finding DN????
+        dn = (-25:0.01:25);   %Filter before finding DN????
         for j = 1:length(dn)
           
           term_1 = 2*dn(j).*((Greenland.depth_avg_filt(id)-Greenland.relative_depth)).*((along_track(id)-mean(along_track(id))));

@@ -1,3 +1,8 @@
+
+
+function [success]=calculate_reflectivity_task(param)
+
+
 %Script: estimation_of_relative_reflectivity_values
 %  Fit Na and DN for every 1 km
 %{
@@ -16,21 +21,6 @@ Na_reg =
 Na_bar =
     9.7500
 
-%%Coherent int 600 peterman
-median_power =
-  -76.2135
-mean_power =
-  -41.1230
-max_power =
-   -7.1976
-avg_depth =
-   1.5000e+03
-Na_reg =
-    9.7221
-Na_bar =
-    9.7000
-
-
 %%Jacobshavn
 median_power =
   -61.5947
@@ -47,15 +37,12 @@ Na_bar =
 %}
 
 %% setup
-clear
-close all
-clc
+
+
 dbstop if error
 
-settings.location={'Peterman'};
-
-
-plots =1;
+settings.location=param.location;
+plots =0;
 numofCohInt=0;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
@@ -64,17 +51,15 @@ depth_G_r_corrected = [];
 constant_attenuation = [];
 estimated_Na = [];
 estimated_DN=[];
-modified_Na=[];
 variable_attenuation=[];
 c_ref=[];
 v_ref=[];
-line_no=[];
 %% loading the data
 
 if strcmp(settings.location,'Jacobshavn')
   
   median_power= -61.5947;
-  mean_power =  -41.1230;
+  mean_power = -43.2931;
   max_power =-5.4816;
   avg_depth =1.1496e+03;
   Na_reg =13.1028;
@@ -82,24 +67,18 @@ if strcmp(settings.location,'Jacobshavn')
   num_of_lines=61;
   
 elseif strcmp(settings.location,'Peterman')
-%   median_power =-59.6864;
-%   mean_power =-27.6142;
-%   max_power =2.7618;
-%   avg_depth =1.5050e+03;
-%   Na_reg = 9.7746;
-%   Na_bar =9.7500;
- median_power =-76.2135;
-   mean_power =-27.6142;
-   max_power =   -7.1976;
-   avg_depth =1.50e+03;
-   Na_reg = 9.7746;
-   Na_bar =9.7000;
-  num_of_lines=35;
+  median_power =-59.6864;
+  mean_power =-27.6142;
+  max_power =2.7618;
+  avg_depth =1.5050e+03;
+  Na_reg = 9.7746;
+  Na_bar =9.7500;
+  num_of_lines=40;
 end
 
 disp('Englacial Attn Method 2')
-for iter=1
-  for M =1:num_of_lines
+
+  for M =param.lines
     
     % clearvars -except M coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
     clc
@@ -131,17 +110,8 @@ for iter=1
     
     
     physical_constants
-    figure; plot( lp(Greenland.ice_bed_power));
-      grid on; title('Along Track vs Power before coh integration')
-      
-      %% COHERENT INTEGRATIONS
-    if numofCohInt~=0
-      [Greenland]=coh_integration(Greenland,numofCohInt);
-       
-      
-    end
-    
     %%
+    
     Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
     Greenland.surface_height = (Greenland.surface_time)*c/2;
     Greenland.geometric_loss = (2*(Greenland.surface_height+Greenland.depth/sqrt(er_ice))).^2;
@@ -197,7 +167,10 @@ for iter=1
     
     %Coherent Integration to increase SNR
     
-  
+    %% COHERENT INTEGRATIONS
+    if numofCohInt~=0
+      [Greenland]=coh_integration(Greenland,numofCohInt);
+    end
     
     
     Greenland.ice_bed_power=abs(Greenland.ice_bed_power).^2;   %Ice bed power
@@ -210,18 +183,18 @@ for iter=1
     
     %% compensating reflected bed power for surface roughness
     settings.num_int=1000;
-    settings.repeat_after=600;
+    settings.repeat_after=10;
     settings.type='surface';
     settings.cross_lines=cross_lines;
     settings.M=M;
     settings.M1=M1;
-    settings.rerun=0;
     % [Greenland,sf_rms]=surf_roughness(Greenland,num_int,repeat_after);
     [Greenland,sf_rms,sf_corr_power,orig_avg_power]=surf_roughness(Greenland,settings);
     
     
     if plots
       figure(3);subplot(3,1,1); plot(lp(orig_avg_power));
+      
       hold on; plot(lp( Greenland.ice_bed_power_avg));
       grid on
       title('Ice Bed Power surface roughness corrected')
@@ -236,15 +209,14 @@ for iter=1
     if 0
       settings.type='bed';
       settings.iter=iter;
-      if settings.iter==1
+      if settings.iter==2
         figure(201); subplot(2,1,1); plot(lp(Greenland.ice_bed_power_avg));
-      %  Greenland.ice_bed_power_avg=Greenland.ice_bed_power_avg.*(10.^(Attenuation.const_attenuation/10));
-       % figure(201); subplot(2,1,1);hold on; plot(lp(Greenland.ice_bed_power_avg));
-       % legend('Before const attn','After const attn')
-        %figure(201); hold on;subplot(2,1,2); hold on; plot(Attenuation.const_attenuation);
-        [Greenland,bed_rms,bed_corr_power]=bed_roughness(Greenland,settings);
+        Greenland.ice_bed_power_avg=Greenland.ice_bed_power_avg.*(10.^(Attenuation.const_attenuation/10));
+        figure(201); subplot(2,1,1);hold on; plot(lp(Greenland.ice_bed_power_avg));
+        legend('Before const attn','After const attn')
+        figure(201); hold on;subplot(2,1,2); hold on; plot(Attenuation.const_attenuation);
       end
-   
+      [Greenland,bed_rms,bed_corr_power]=bed_roughness(Greenland,settings);
       
       if plots
         figure(3);subplot(3,1,1)
@@ -300,8 +272,8 @@ for iter=1
     
     %% attenuation_fitting
     %reference_power = 25 ;
-    Greenland.reference_power = nanmedian((Greenland.ice_bed_power_cgl));
-   % Greenland.reference_power =mean_power;
+    %  Greenland.reference_power = nanmean((Greenland.ice_bed_power_cgl));
+    Greenland.reference_power =median_power;
     %reference_power=-15;
     Greenland.relative_ice_bed_power_G_r_corrected = (Greenland.ice_bed_power_cgl)-Greenland.reference_power;
     
@@ -351,15 +323,10 @@ for iter=1
     Greenland.geometric_loss_avg_filt=Greenland.geometric_loss_avg(notnanidx);
     
     
-    
-    if iter<10
+  
       power_filtered_long=sgolayfilt(Greenland.relative_ice_bed_power_G_r_corrected_filt,2,window1,gausswin(window1));
       power_filtered_short=sgolayfilt(Greenland.relative_ice_bed_power_G_r_corrected_filt,2,window2,gausswin(window2));
-    else
-      power_filtered_long=Greenland.relative_ice_bed_power_G_r_corrected_filt;
-      power_filtered_short=Greenland.relative_ice_bed_power_G_r_corrected_filt;
-      
-    end
+  
     if plots
       figure;plot(power_filtered_long); hold on; plot(Greenland.relative_ice_bed_power_G_r_corrected_filt)
       legend('filtered','original'); title('Long filter')
@@ -388,20 +355,16 @@ for iter=1
     
     %% Attenuation calculation
     %Method 1 fit Na and DN for evry 1 km
-     out.att_method=1;
-     [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short);
-%     
-    %%Method 2 use Na from 1 and fit DN for every line
-    %out.att_method=2;
-   %[Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_short,Na_bar);
+    %out.att_method=1;
+    %[Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short);
     
-     %Method  DN for evry 1 km and Na for overall
-   %  out.att_method=3;
-    % [Attenuation]=attenuation_calculation_method3(Greenland,power_filtered_short,Na_bar);
+    %%Method 2 use Na from 1 and fit DN
+    out.att_method=2;
+    [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_short,Na_bar);
     
     if plots
       figure;plot(Attenuation.const_attenuation);title('Const Attenuation')
-     hold on;plot(Attenuation.var_attenuation); title('Const and Var attenuation')
+      figure;plot(Attenuation.var_attenuation); title('Var attenuation')
       figure;plot(Greenland.depth); title('Depth')
       figure;plot(Attenuation.estimated_dn); title('Estimated DN')
       figure;plot(Attenuation.estimated_na); title('Estimated NA')
@@ -430,20 +393,17 @@ for iter=1
       Greenland.relative_ice_bed_power_G_r_corrected=power_g_r_corr;
       
     end
-    if iter==1
+    
     constant_attenuation =  cat(2,constant_attenuation, Attenuation.const_attenuation);
     estimated_Na = cat(2,estimated_Na, Attenuation.estimated_na);
     estimated_DN=cat(2,estimated_DN,Attenuation.estimated_dn);
-    modified_Na=cat(2,modified_Na,Attenuation.mod_na);
     variable_attenuation=cat(2,variable_attenuation,Attenuation.var_attenuation);
     
     ref=Greenland.relative_ice_bed_power_G_r_corrected+Attenuation.const_attenuation;
     ref2=Greenland.relative_ice_bed_power_G_r_corrected+Attenuation.var_attenuation;
     c_ref=cat(2,c_ref,ref);
     v_ref=cat(2,v_ref,ref2);
-    line_num=M*ones(1,length(v_ref));
-    line_no=cat(2,line_no,line_num);
-    end
+    
     if plots
       %       ref=Greenland.ice_bed_power_cgl-nanmean(Greenland.ice_bed_power_cgl)+Attenuation.const_attenuation;
       %       ref2=Greenland.ice_bed_power_cgl-nanmean(Greenland.ice_bed_power_cgl)+Attenuation.var_attenuation;
@@ -453,193 +413,34 @@ for iter=1
       figure;histogram(ref2);title('Reflectivity using var Na')
     end
     
-    
-    %     const_att_iter{iter}=Attenuation.const_attenuation;
-    %     var_att_iter{iter}=Attenuation.var_attenuation;
-    %     c_ref{iter}=ref;
-    %     v_ref{iter}=ref2;
-    close all
-    
+    save_ref_en=1;
+    if save_ref_en
+      
+      out.Latitude=lat_G_r_corrected;
+      out.Longitude=lon_G_r_corrected;
+      out.const_attenuation=constant_attenuation;
+      out.var_attenuation=variable_attenuation;
+      out.Depth=depth_G_r_corrected;
+      out.Refl_const=c_ref;
+      out.Refl_var=v_ref;
+      out.ref='median';
+      
+      if strcmp(settings.location,'Peterman')
+        
+        if cross_lines
+          save(['/cresis/snfs1/scratch/manjish/new_peterman/reflectivity/crossline' num2str(M,'%d') '.mat'],'out');
+        else
+          save(['/cresis/snfs1/scratch/manjish/new_peterman/reflectivity/verticalline' num2str(M1,'%d') '.mat'],'out');
+        end
+        
+      elseif  strcmp(settings.location,'Jacobshavn')
+        if cross_lines
+          save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity/crossline' num2str(M,'%d') '.mat'],'out');
+        else
+          save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity/verticalline' num2str(M1,'%d') '.mat'],'out');
+        end
+      end
+    end
   end
-end
-
-
-% for i=1:iter
-%
-%   figure(10000);hold on; plot(const_att_iter{i});title('Const Attn')
-%   figure(10001);hold on; plot(var_att_iter{i});title('Var Attn')
-%   figure(10002);hold on; plot(c_ref{i});title('Reflectivity using const Na')
-%   figure(10003);hold on; plot(v_ref{i});title('Reflectivity using var Na')
-%
-% end
-% figure(10004); histogram(c_ref{i});title('Iter 3 consta att')
-% figure(10005); histogram(v_ref{i});title('Iter 3 const att')
-% figure;(10006); histogram(c_ref{1}); title('Iter 1 const att')
-%keyboard
-if 1
-  %   depth_G_r_corrected = depth_G_r_corrected / 1000;
-  %
-  %   reference_power = nanmean(ice_bed_power_G_r_corrected(isfinite(ice_bed_power_G_r_corrected)));
-  %
-  %   %reference_power=25;
-  %   %relative_ice_bed_power_G_r_corrected = lp(ice_bed_power_G_r_corrected/reference_power);
-  %   relative_ice_bed_power_G_r_corrected = (ice_bed_power_G_r_corrected)-(reference_power);
-  %
-  %   relative_reflectivty_using_constant_attn = relative_ice_bed_power_G_r_corrected + constant_attenuation ;
-  %   relative_reflectivty_using_variable_attn = relative_ice_bed_power_G_r_corrected + variable_attenuation ;
-  
-  geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
-  proj = geotiffinfo(geotiff_fn);
-  %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
-  
-  [A CMAP R]= geotiffread(geotiff_fn);
-  
-  %% Reflectivity using constant na
-  
-  figure(1)
-  mapshow(rgb2gray(A),CMAP/1e3);
-  xlabel('X (km)');
-  ylabel('Y (km)');
-  if  strcmp(settings.location,'Peterman')
-    xlim([-350 -50]);
-    ylim([-1250 -900]);
-  else
-   xlim([-250 -50]);
-    ylim([-2400 -2160]);
-  end
-  
-  hold on
-  clear gps.x gps.y
-  [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  
-  gps.x = gps.x / 1000;
-  gps.y = gps.y / 1000;
-  hold on;
-  
-  scatter(gps.x,gps.y,20,c_ref,'fill')
-  caxis([-15 15])
-  colorbar;
-  title('Reflectivity using constant na ')
-  
-  %Histogram
-  figure(2), hist(c_ref,30);
-  title('Reflectivity using constant na ')
-  
-  %% Reflectivity using variable attenuation
-  figure(3)
-  mapshow(rgb2gray(A),CMAP/1e3);
-  xlabel('X (km)');
-  ylabel('Y (km)');
-  if  strcmp(settings.location,'Peterman')
-    xlim([-350 -50]);
-    ylim([-1250 -900]);
-  else
-   xlim([-250 -50]);
-    ylim([-2400 -2160]);
-  end
-  hold on
-  clear gps.x gps.y
-  [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  
-  gps.x = gps.x / 1000;
-  gps.y = gps.y / 1000;
-  hold on;
-  
-  scatter(gps.x,gps.y,20,v_ref,'fill')
-  caxis([-15 15])
-  colorbar;
-  title('Reflectivity using variable na ')
-  
-  %Histogram
-  figure(4), hist(v_ref,30);
-  title('Reflectivity using variable na ')
-  
-  %% Plot Total Constant Attn
-  figure(5)
-  mapshow(rgb2gray(A),CMAP/1e3);
-  xlabel('X (km)');
-  ylabel('Y (km)');
-  if  strcmp(settings.location,'Peterman')
-    xlim([-350 -50]);
-    ylim([-1250 -900]);
-  else
-    xlim([-250 -50]);
-    ylim([-2400 -2160]);
-  end
-  hold on
-  clear gps.x gps.y
-  [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  gps.x = gps.x / 1000;
-  gps.y = gps.y / 1000;
-  hold on;
-  
-  scatter(gps.x,gps.y,20,constant_attenuation,'fill')
-  %caxis([-15 15])
-  colorbar;
-  title('Total Constant Attenuation')
-  
-  %% Plot Total Variable Attn
-  figure(6)
-  mapshow(rgb2gray(A),CMAP/1e3);
-  xlabel('X (km)');
-  ylabel('Y (km)');
-  if  strcmp(settings.location,'Peterman')
-    xlim([-350 -50]);
-    ylim([-1250 -900]);
-  else
-    xlim([-250 -50]);
-    ylim([-2400 -2160]);
-  end
-  hold on
-  clear gps.x gps.y
-  [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  gps.x = gps.x / 1000;
-  gps.y = gps.y / 1000;
-  hold on;
-  
-  scatter(gps.x,gps.y,20,variable_attenuation,'fill')
-  %caxis([-15 15])
-  colorbar;
-  title('Total Variable Attenuation')
-  
-  %% Plot Value of DN
-  %   figure(7)
-  %   mapshow(rgb2gray(A),CMAP/1e3);
-  %   xlabel('X (km)');
-  %   ylabel('Y (km)');
-  %   %xlim([350 650]);
-  %   %ylim([-1000 -600]);
-  %
-  %   hold on
-  %   clear gps.x gps.y
-  %   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  %   gps.x = gps.x / 1000;
-  %   gps.y = gps.y / 1000;
-  %   hold on;
-  %
-  %   scatter(gps.x,gps.y,20,estimated_DN,'fill')
-  %   %caxis([-15 15])
-  %   colorbar;
-  %   title('Value of DN ')
-end
-
-save_ref_en=0;
-if save_ref_en
-  
-  out.Latitude=lat_G_r_corrected;
-  out.Longitude=lon_G_r_corrected;
-  out.const_attenuation=constant_attenuation;
-  out.var_attenuation=variable_attenuation;
-  out.Depth=depth_G_r_corrected;
-  out.Refl_const=c_ref;
-  out.Refl_var=v_ref;
-  out.line_no=line_no;
-  out.estimated_Na=estimated_Na;
-  out.estimated_DN=estimated_DN;
-  
-  if strcmp(settings.location,'Peterman')
-    save(['/cresis/snfs1/scratch/manjish/new_peterman/reflectivity_max_att2.mat'],'out')
-  else
-    save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity_max_att2.mat'],'out')
-  end
-end
+  success=true;
+  return

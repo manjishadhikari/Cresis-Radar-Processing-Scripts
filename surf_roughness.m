@@ -6,6 +6,7 @@ M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
 file_exist = false;
+
     if settings.cross_lines==1
       if strcmp(settings.location,'Jacobshavn')
       if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline',num2str(M),'.mat'])),'file')
@@ -34,7 +35,7 @@ file_exist = false;
     end
     
    
-    if ~file_exist
+    if ~file_exist || settings.rerun==1
       settings.save_en=1;
       [r]=roughness_calculation(Greenland,settings);
     end

@@ -6,11 +6,17 @@ dbstop error
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/combineddata_w_idx.mat'];
+  out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data_2010_coh_int.mat'];
   load(out_fn);
 end
 physical_constants
 plots =1;
+
+numofCohInt=0;
+if numofCohInt~=0
+      [Greenland]=coh_integration(Greenland,numofCohInt);
+end
+
 
 clear idx
 idx = find(isnan(Greenland.ice_bed_power)) ;
@@ -45,20 +51,21 @@ if plots
   % hist(10*log10(Greenland.ice_bed_power),40)
 end
 
-[Greenland.depth_sorted Greenland.index]= sort(Greenland.depth);
-Greenland.ice_bed_power_sorted = Greenland.ice_bed_power(Greenland.index);
-Greenland.surface_height_sorted = Greenland.surface_height(Greenland.index);
-Greenland.Latitude_sorted = Greenland.Latitude(Greenland.index);
-Greenland.Longitude_sorted = Greenland.Longitude(Greenland.index);
+[Greenland.depth_sorted Greenland.sortindex]= sort(Greenland.depth);
+Greenland.ice_bed_power_sorted = Greenland.ice_bed_power(Greenland.sortindex);
+Greenland.surface_height_sorted = Greenland.surface_height(Greenland.sortindex);
+Greenland.Latitude_sorted = Greenland.Latitude(Greenland.sortindex);
+Greenland.Longitude_sorted = Greenland.Longitude(Greenland.sortindex);
 
 if plots
   figure;plot(Greenland.depth_sorted, 10*log10(abs(Greenland.ice_bed_power_sorted).^2));
   grid on
-  title('Depth vd Ice Bed Power after sorting')
+  title('Depth vs Ice Bed Power after sorting')
+  xlabel('Depth in metres'); ylabel('Ice Bed Power in dB')
 end
 geometric_loss_sorted = (2*(Greenland.surface_height_sorted+Greenland.depth_sorted/sqrt(er_ice))).^2;
 Greenland.ice_bed_power_cgl_sorted=(abs(Greenland.ice_bed_power_sorted).^2).*geometric_loss_sorted;
-%Greenland.ice_bed_power_cgl_sorted = Greenland.ice_bed_power_cgl(Greenland.index);
+%Greenland.ice_bed_power_cgl_sorted = Greenland.ice_bed_power_cgl(Greenland.sortindex);
 
 if plots
   figure;
@@ -75,6 +82,9 @@ if plots
   title('Along track vs Depth');
   xlabel('Along Track'); ylabel('Depth')
   
+  figure;plot(Greenland.depth_sorted,lp(Greenland.ice_bed_power_cgl_sorted));
+  title('Ice Bed Power afer Geometric Loss Corrected')
+  xlabel('Depth in m'); ylabel('Power in dB')
 end
 
 clear idx
@@ -89,11 +99,11 @@ Greenland.ice_bed_power_cgl_sorted(idx) = [];
 Greenland.depth_sorted (idx)= [];
 
 %Mean -141 for 20110429_01_028
-Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./mean(Greenland.ice_bed_power_cgl_sorted);
+Greenland.ice_bed_power_rgl_sorted = Greenland.ice_bed_power_cgl_sorted./median(Greenland.ice_bed_power_cgl_sorted);
 if plots
   figure(6);plot(Greenland.depth_sorted, lp((Greenland.ice_bed_power_rgl_sorted)));
   grid on
-  title('After Mean Removed')
+  title('Relative Ice Bed Power');  xlabel('Depth in m'); ylabel('Power in dB')
 end
 median_power = lp(median(Greenland.ice_bed_power_cgl_sorted))  %6.3224 dB
 mean_power=lp(mean(Greenland.ice_bed_power_cgl_sorted))
@@ -103,34 +113,63 @@ avg_depth = mean(Greenland.depth_sorted)     %1.6033 km
 
 [r,m,b]=regression(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),lp((Greenland.ice_bed_power_rgl_sorted)));
 val=m*(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)))+b;
-figure(60); plot(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),lp((Greenland.ice_bed_power_rgl_sorted)));
-figure(60); hold on; plot(-2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),val);
+figure(60); plot(2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),lp((Greenland.ice_bed_power_rgl_sorted)));
+figure(60); hold on; plot(2*(Greenland.depth_sorted-mean(Greenland.depth_sorted)),val);
 %Na=10^3*10*log10(exp(1))/m; %
 %Na=(val(end)-val(1))/(Greenland.depth_sorted(end)-Greenland.depth_sorted(1))*1000    %One way depth averaged attenuation rate
 Na_reg=m*1000
 
-
+xlabel('Relative Depth in m'); ylabel('Relative Ice Bed Power dB')
+title('Regression Fit')
 
 Na = 1:0.05:25;    %Least Mean Square Error Method
 for  j = 1:length(Na)
   mse(j) = mean((-lp(Greenland.ice_bed_power_rgl_sorted)- 2*Na(j)*(Greenland.depth_sorted-mean((Greenland.depth_sorted)))/1000).^2);
 end
 figure;plot(mse);
-[~, index] = min(mse);
-Na_bar  = Na(index)
+[~, index1] = min(mse);
+Na_bar  = Na(index1)
 
 figure;plot(lp(Greenland.ice_bed_power_rgl_sorted));
 hold on; plot(-2*Na_bar*(Greenland.depth_sorted-mean((Greenland.depth_sorted)))/1000);
+xlabel('Samples');ylabel('Relative Ice Bed Power dB')
+title('Least Mean Square Error Fit Method')
 
 ice_bed_reflectivity=lp(Greenland.ice_bed_power_rgl_sorted)+2*Na_bar*(Greenland.depth_sorted-avg_depth)/1000;
 figure;histogram(ice_bed_reflectivity);
+xlabel('Relative Reflectivity');ylabel('Frequency')
 keyboard
 
-%Decimate
-lat=decimate(Greenland.Latitude_sorted,100);
-lon=decimate(Greenland.Longitude_sorted,100);
-ice_bed_refl=decimate(ice_bed_reflectivity,100);
 
+%Ice Bed Reflectivity at 5dB/km att rate
+ice_bed_refl_5dB=lp(Greenland.ice_bed_power_rgl_sorted)+2*5*(Greenland.depth_sorted-avg_depth)/1000;
+ice_bed_refl_10dB=lp(Greenland.ice_bed_power_rgl_sorted)+2*10*(Greenland.depth_sorted-avg_depth)/1000;
+ice_bed_refl_15dB=lp(Greenland.ice_bed_power_rgl_sorted)+2*15*(Greenland.depth_sorted-avg_depth)/1000;
+ice_bed_refl_20dB=lp(Greenland.ice_bed_power_rgl_sorted)+2*20*(Greenland.depth_sorted-avg_depth)/1000;
+
+
+figure;histogram(ice_bed_refl_5dB);
+figure;histogram(ice_bed_refl_10dB);
+figure;histogram(ice_bed_refl_15dB);
+figure;histogram(ice_bed_refl_20dB);
+
+
+%Decimate
+% lat=decimate(Greenland.Latitude_sorted,100);
+% lon=decimate(Greenland.Longitude_sorted,100);
+% ice_bed_refl=decimate(ice_bed_reflectivity,100);
+% ice_bed_refl_5=decimate(ice_bed_refl_5dB,100);
+% ice_bed_refl_10=decimate(ice_bed_refl_10dB,100);
+% ice_bed_refl_15=decimate(ice_bed_refl_15dB,100);
+% ice_bed_refl_20=decimate(ice_bed_refl_20dB,100);
+close all
+ lat=Greenland.Latitude_sorted;
+lon=Greenland.Longitude_sorted;
+ ice_bed_refl=ice_bed_reflectivity;
+ ice_bed_refl_5=ice_bed_refl_5dB;
+ice_bed_refl_10=ice_bed_refl_10dB;
+ ice_bed_refl_15=ice_bed_refl_15dB;
+ ice_bed_refl_20=ice_bed_refl_20dB;
 
 %% Plotting on map
 geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
@@ -141,12 +180,12 @@ proj = geotiffinfo(geotiff_fn);
 
 %% Reflectivity using constant na
 
-figure(1)
+figure(101)
 mapshow(rgb2gray(A),CMAP/1e3);
 xlabel('X (km)');
 ylabel('Y (km)');
-xlim([350 650]);
-ylim([-1000 -600]);
+xlim([-350 -50]);
+ylim([-1250 -900]);
 
 hold on
 clear gps.x gps.y
@@ -157,11 +196,164 @@ gps.y = gps.y / 1000;
 hold on;
 
 
-scatter(gps.x,gps.y,20,ice_bed_refl,'fill')
-caxis([-40 40])
+scatter(gps.x,gps.y,20,ice_bed_refl,'s','fill')
+caxis([-15 15])
 colorbar;
-title('Reflectivity using constant na ')
+c=colorbar;
+c.Label.String='Reflectivity';
+title('Reflectivity using constant na  9.7 dB/km')
+
+%5dB
+figure(102)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat,lon);
+
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+
+
+scatter(gps.x,gps.y,20,ice_bed_refl_5,'s','fill')
+caxis([-20 20])
+colorbar;
+c=colorbar;
+c.Label.String='Reflectivity';
+title('Reflectivity using 5db/km ')
+
+%10dB
+figure(103)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat,lon);
+
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+
+scatter(gps.x,gps.y,20,ice_bed_refl_10,'s','fill')
+caxis([-20 20])
+colorbar;
+c=colorbar;
+c.Label.String='Reflectivity';
+title('Reflectivity using 10dB/km att rate ')
+
+%15db
+
+figure(104)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat,lon);
+
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+
+
+scatter(gps.x,gps.y,20,ice_bed_refl_15,'s','fill')
+caxis([-20 20])
+colorbar;
+c=colorbar;
+c.Label.String='Reflectivity';
+title('Reflectivity using15 dB/km att rate ')
+
+%20dB
+figure(106)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat,lon);
+
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+
+
+scatter(gps.x,gps.y,20,ice_bed_refl_20,'s','fill')
+caxis([-20 20])
+colorbar;
+c=colorbar;
+c.Label.String='Reflectivity';
+title('Reflectivity using 20 dB/km att rate ')
 
 %Histogram
 figure(2), hist(ice_bed_reflectivity,30);
 title('Reflectivity using constant na ')
+xlabel('Relative Reflectivity');ylabel('Frequency')
+
+
+%coherence Index Map
+
+idx=find(Greenland.index.coherence>0.2);
+coh=Greenland.index.coherence(idx);
+lat1=Greenland.index.Latitude_mean(idx);
+lon1=Greenland.index.Longitude_mean(idx);
+
+
+figure(107)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat1,lon1);
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+scatter(gps.x,gps.y,20,coh,'s','fill')
+%caxis([min(Greenland.index.coherence) max(Greenland.index.coherence)])
+%caxis([0.05 0.08])
+colorbar;
+c=colorbar;
+c.Label.String='Value';
+title('Coherence Index ')
+
+%Abruptive Index Map
+
+figure(108)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,Greenland.index.Latitude_mean,Greenland.index.Longitude_mean);
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+scatter(gps.x,gps.y,20,Greenland.index.abruptness,'s','fill')
+%caxis([min(Greenland.index.abruptness) max(Greenland.index.abruptness)])
+caxis([0.1 0.3])
+colorbar;
+c=colorbar;
+c.Label.String='value';
+title('Abruptive Index ')
+
+
+

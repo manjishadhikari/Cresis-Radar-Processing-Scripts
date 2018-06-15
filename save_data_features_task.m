@@ -67,9 +67,9 @@ else
     %   Day_seg={'20100517_01','20110331_04','20110408_18',}
     %   frms={[6,7],[10,11],[13,14],[16,17],[19],[23,24],[25,26],[29,30],[1],[2],}
     
-    Day={'20120502_01','20130410_01','20130415_01','20140419_02','20140419_03'}; 
-    Day_seg=repelem(Day,[9,7,1,3,5]);
-    frms={[5,6],[8,9],[10,11],[14,15],[16,17],[20,21],[22,23],[28,29],[30],[4,5],[8:10],[11,12],[15],[16,17],[28],[33],[4,5],[4,5],[7,8],[9,10],[2],[3,4],[14],[15,16],[19]};
+    Day={'20120502_01','20130410_01','20130415_01','20140419_02','20140419_03','20100517_01'}; 
+    Day_seg=repelem(Day,[9,7,1,3,5,8]);
+    frms={[5,6],[8,9],[10,11],[14,15],[16,17],[20,21],[22,23],[28,29],[30],[4,5],[8:10],[11,12],[15],[16,17],[28],[33],[4,5],[4,5],[7,8],[9,10],[2],[3,4],[14],[15,16],[19],[6 7],[10 11 12],[13 14],[16 17],[19],[23 24],[25 26],[29 30]};
     
   else
     %      for vertical lines
@@ -77,9 +77,9 @@ else
     %Day_seg={'20100514_01','20100514_02'};
     %frms={[5,6],[1,2],[3,4]};
     
-    Day={'20110406_01','20110422_01','20120421_01','20130410_01','20130404_02','20140414_02','20140409_01','20140409_02'};
-    Day_seg=repelem(Day,[6,1,9,1,8,2,6,4]);
-    frms={[4:6],[7:9],[10:12],[13:15],[16:18],[19:21],[2:4],[7:9],[10:12],[13:15],[16:18],[19:21],[22:24],[25:27],[28],[52],[50:52],[1,2],[3:5],[6,7],[8:10],[11:13],[14],[25],[38:40],[5:6],[12],[5:7],[8:10],[11,12],[13;15],[16,17],[18:20],[15],[19:22],[28:29],[34:36]};
+    Day={'20110406_01','20110422_01','20120421_01','20130410_01','20130404_02','20140414_02','20140409_01','20140409_02','20100514_01','20100514_02'};
+    Day_seg=repelem(Day,[6,1,9,1,8,2,6,4,1,2]);
+    frms={[4:6],[7:9],[10:12],[13:15],[16:18],[19:21],[2:4],[7:9],[10:12],[13:15],[16:18],[19:21],[22:24],[25:27],[28],[52],[50:52],[1,2],[3:5],[6,7],[8:10],[11:13],[14],[25],[38:40],[5:6],[12],[5:7],[8:10],[11,12],[13;15],[16,17],[18:20],[15],[19:22],[28:29],[34:36],[5 6],[1 2],[3 4]};
   end
 end
 
@@ -155,6 +155,7 @@ for k =param.proc_line
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','CSARP_manjish');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
+       
     end
 end
  else
@@ -186,12 +187,19 @@ end
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','manjish/CSARP_Data');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
-    else 
+    elseif (18<k & k<26)
       param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2014_Greenland_P3.xls'),Day_seg{k});
       param=mergestruct(param,param1);
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','CSARP_manjish');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
+    else
+      param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2010_Greenland_P3.xls'),Day_seg{k});
+      param=mergestruct(param,param1);
+      gps_fn = ct_filename_support(param,'','gps',1);
+      data_dir = ct_filename_out(param,'','CSARP_manjish');
+      layer_dir = ct_filename_out(param,'','CSARP_layerData');
+      
     end
     
   else
@@ -215,12 +223,18 @@ end
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','manjish/CSARP_Data');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
-      else
+    elseif (16<k & k<38)
       param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2014_Greenland_P3.xls'),Day_seg{k});
       param=mergestruct(param,param1);
       gps_fn = ct_filename_support(param,'','gps',1);
       data_dir = ct_filename_out(param,'','CSARP_manjish');
       layer_dir = ct_filename_out(param,'','CSARP_post/CSARP_layerData');
+    else
+       param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2010_Greenland_P3.xls'),Day_seg{k});
+      param=mergestruct(param,param1);
+      gps_fn = ct_filename_support(param,'','gps',1);
+      data_dir = ct_filename_out(param,'','CSARP_manjish');
+      layer_dir = ct_filename_out(param,'','CSARP_layerData');
     end
 end
   
@@ -1205,17 +1219,17 @@ end
   if cross_lines
     disp(sprintf('Saving Cross Line %d\n',k))
     if Peterman
-     save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
+     save(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
     else
-      save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
+      save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline' num2str(k,'%d') '.mat'],'Greenland');
  
     end
   else
     disp(sprintf('Saving Vertical Line %d\n',k))
     if Peterman
-        save(['/cresis/snfs1/scratch/manjish/peterman/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
     else
-        save(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
+        save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline' num2str(k,'%d') '.mat'],'Greenland');
  
     end
     end

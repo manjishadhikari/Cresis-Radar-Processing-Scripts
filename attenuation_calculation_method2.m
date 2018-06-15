@@ -12,13 +12,7 @@ function [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_
         term_1 = 2*dn(j).*((Greenland.depth_avg_filt-Greenland.relative_depth)).*((along_track-mean(along_track)));
         term_2 = 2*Na*((Greenland.depth_avg_filt-Greenland.relative_depth));
         S(j) = mean(((power_filtered_short)+term_1+term_2).^2);
-        if 0
-          figure;plot(real(-power_filtered_short))
-          hold on
-          plot(term_1+term_2)
-          % keyboard
-          %clf
-        end
+        
         if j > 1
           if S(j-1)<S(j)
             DN = dn(j-1);
@@ -28,6 +22,9 @@ function [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_
       end
       
       if 0
+          figure;plot((power_filtered_short))
+          hold on
+          plot(term_1+term_2)
         figure;plot(S);
       end
       

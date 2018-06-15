@@ -20,7 +20,7 @@ for l = num_int/2:repeat_after:length(power)
     r.lat(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
     r.lon(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
     if all(abs(Greenland.roll((l-num_int/2+1):(l+num_int/2)))<5)
-      s = abs(power((l-num_int/2+1):(l+num_int/2)));
+      s = sqrt(power((l-num_int/2+1):(l+num_int/2))); %echo amplitudes
       id = find(isnan(s)|isinf(s)|s==0);
       if length(id) > num_int/2
         r.rms_height(k) = nan;
@@ -61,7 +61,11 @@ for l = num_int/2:repeat_after:length(power)
       cost_func=@(r_rms)(abs(rms_fit - exp(-(2*(2*pi/(c/param.radar.fc))*r_rms).^2)/((r_rms).^2)));
       r_rms=[0.00001,1];
       [r_rmsheight,fval]=fminsearch(cost_func,r_rms);
-      r.rms_height(k)=mean(abs(r_rmsheight));
+      r.rms_height(k)=max(abs(r_rmsheight));
+     
+      
+      %MSE Method
+      
       %{
             clear MSE
             for i = 1:5000
@@ -90,6 +94,7 @@ for l = num_int/2:repeat_after:length(power)
             end
             
       %}
+      
       if isnan(r.rms_height(k))
         r.dielectric_constant(k) = nan;
       else
