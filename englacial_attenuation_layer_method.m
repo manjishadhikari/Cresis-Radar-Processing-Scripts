@@ -21,11 +21,12 @@ for k=1:length(frms)
 %     roll=data.Roll*180/pi;
 %     ridx=find(abs(roll)>5);
 %     data.Data(:,ridx)=nan;
+
     
     if 1
     figure(100); imagesc(lp(data.Data)); title('Original data')
     
-    inc_B_filter=ones(51,1)/51;
+    inc_B_filter=ones(31,1)/31;
     Incoh_data=fir_dec(fir_dec(abs(data.Data).^2,inc_B_filter',600),1);
     coh_data=fir_dec(data.Data,600);
  
@@ -51,16 +52,17 @@ for k=1:length(frms)
              idx2=i*numofCohInt;
           %  idx1=m;
            % idx2=m+numofCohInt;
-            if idx2>length(data.GPS_time) & length(data.GPS_time)-idx1>numofCohInt/2
+            if idx2>length(data.GPS_time) & length(data.GPS_time)-idx1>=numofCohInt/2
                 idx2=length(data.GPS_time);
             elseif idx2>length(data.GPS_time)& length(data.GPS_time)-idx1<numofCohInt/2
                 continue;
             end
+            tmp_data.Roll(i)=max(data.Roll(idx1:idx2));
             tmp_data.GPS_time(i)=nanmean(data.GPS_time(idx1:idx2));
             tmp_data.Latitude(i)=nanmean(data.Latitude(idx1:idx2));
             tmp_data.Longitude(i)=nanmean(data.Longitude(idx1:idx2));
             tmp_data.Elevation(i)=nanmean(data.Elevation(idx1:idx2));
-            tmp_data.Roll(i)=max(data.Roll(idx1:idx2));
+          %  tmp_data.Roll(i)=max(data.Roll(idx1:idx2));
           %  tmp_data.Data(:,i)=nanmean((abs(data.Data(:,idx1:idx2)).^2),2);
          %    i=i+1;
         end
@@ -74,9 +76,9 @@ for k=1:length(frms)
    figure;plot(diff(dist));
    
     
-    roll=data.Roll*180/pi;
-    ridx=find(abs(roll)>5);
-    data.Data(:,ridx)=nan;
+     roll=data.Roll*180/pi;
+     ridx=find(abs(roll)>5);
+     data.Data(:,ridx)=nan;
    
    
     %layer interpolation
@@ -132,12 +134,12 @@ for k=1:length(frms)
     end
     
     %layer_power(:,ridx)=nan;
-%     layer_power=sgolayfilt(layer_power',5,101);
-%     layer_power=layer_power';
+      layer_power=sgolayfilt(layer_power',1,5);
+      layer_power=layer_power';
     %Plot each layer power across track
     if debug_flag
         figure;plot(lp(layer_power(1,:)))
-        for i=1:100
+        for i=1:209
             
             hold on; plot(lp(layer_power(i,:)))
         end

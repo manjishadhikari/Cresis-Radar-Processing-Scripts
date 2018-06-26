@@ -1,10 +1,11 @@
+
 clear
 close
 clc
 param.radar.fc = 195e6;
 physical_constants;
 debug_flag=0;
-coh_int=600;
+coh_int=0;
 
 
 Greenland.GPS_time = [];
@@ -25,30 +26,60 @@ Greenland.index.GPS_time_ave=[];
 Greenland.index.coherence=[];
 Greenland.index.abruptness=[];
 Greenland.index.Padj=[];
+Greenland.Roll=[];
 Greenland.index.Padj_Na11=[];
 lst=[];
 fprintf('Combining all radar lines..\n')
-Lines=[1:6 1:9];
+Lines=[1:33 1:40];
 
 
 
-for M =1:15
-    L=Lines(M);
-  if M<7
-    tmp=load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/crossline', sprintf('%d.mat',L)]);
+for M =34:73
+  L=Lines(M);
+  if M<34
+    tmp=load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline', sprintf('%d.mat',L)]);
   else
-   % N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline', sprintf('%d.mat',L)]);
+    % N=M-20;
+    tmp= load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline', sprintf('%d.mat',L)]);
   end
   
   if debug_flag
     figure;plot(lp(tmp.Greenland.ice_bed_power));title('Before Coh_int')
   end
   
-  
+  clear tmp_data;
   if coh_int~=0
-    tmp.Greenland=coh_integration(tmp.Greenland,coh_int);
+    % tmp.Greenland=coh_integration(tmp.Greenland,coh_int);
+    length_data=length(tmp.Greenland.ice_bed_power);
+    i=1;
+    for m= 1:20: length_data
+      %  idx1=(i-1)*numofCohInt+1;
+      % idx2=i*numofCohInt;
+      idx1=m;
+      idx2=m+coh_int;
+      if idx2>length_data &  length_data-idx1>=coh_int/2
+        idx2= length_data;
+      elseif idx2> length_data &  length_data-idx1<coh_int/2
+        continue;
+      end
+      
+      tmp_data.GPS_time(i)=nanmean(tmp.Greenland.GPS_time(idx1:idx2));
+      tmp_data.Latitude(i)=nanmean(tmp.Greenland.Latitude(idx1:idx2));
+      tmp_data.Longitude(i)=nanmean(tmp.Greenland.Longitude(idx1:idx2));
+      tmp_data.Elevation(i)=nanmean(tmp.Greenland.Elevation(idx1:idx2));
+      tmp_data.Roll(i)=max(tmp.Greenland.Roll(idx1:idx2));
+      tmp_data.surface_time(i)=nanmean(tmp.Greenland.surface_time(idx1:idx2));
+      tmp_data.ice_bed_time(i)=nanmean(tmp.Greenland.ice_bed_time(idx1:idx2));
+      tmp_data.ice_bed_power(i)=nanmean(tmp.Greenland.ice_bed_power(idx1:idx2));
+      tmp_data.ice_surface_power(i)=nanmean(tmp.Greenland.ice_surface_power(idx1:idx2));
+      i=i+1;
+      %  tmp_data.Data(:,i)=nanmean((abs(data.Data(:,idx1:idx2)).^2),2);
+      %    i=i+1;
+    end
+    %    tmp_data.Time=data.Time;
+     tmp.Greenland=tmp_data;
   end
+ 
   
   if debug_flag
     figure;plot(lp(tmp.Greenland.ice_bed_power)); title('After Coh Int')
@@ -112,24 +143,27 @@ for M =1:15
   Greenland.Latitude = cat(2,Greenland.Latitude, tmp.Greenland.Latitude);
   Greenland.Longitude = cat(2,Greenland.Longitude, tmp.Greenland.Longitude);
   Greenland.Elevation = cat(2,Greenland.Elevation, tmp.Greenland.Elevation);
+  Greenland.Roll = cat(2,Greenland.Roll, tmp.Greenland.Roll);
   Greenland.ice_bed_time = cat(2,Greenland.ice_bed_time, tmp.Greenland.ice_bed_time);
   Greenland.surface_time = cat(2,Greenland.surface_time, tmp.Greenland.surface_time);
   Greenland.ice_bed_power = cat(2,Greenland.ice_bed_power, tmp.Greenland.ice_bed_power);
   Greenland.ice_surface_power = cat(2,Greenland.ice_surface_power, tmp.Greenland.ice_surface_power);
-  Greenland.segments_length = cat(2,Greenland.segments_length, tmp.Greenland.segments_length);
+  
   Greenland.ice_bed_power_cgl = cat(2,  Greenland.ice_bed_power_cgl, tmp.Greenland.ice_bed_power_cgl);
   %         Greenland.surface_peaks = cat(2,Greenland.surface_peaks, tmp.Greenland.surface_peaks);
-  Greenland.index.Latitude_mean=cat(2,Greenland.index.Latitude_mean,tmp.Greenland.index.Latitude_mean);
-  Greenland.index.Longitude_mean=cat(2,Greenland.index.Longitude_mean,tmp.Greenland.index.Longitude_mean);
-  Greenland.index.GPS_time_ave=cat(2,Greenland.index.GPS_time_ave,tmp.Greenland.index.GPS_time_ave);
-  Greenland.index.coherence=cat(2,Greenland.index.coherence,tmp.Greenland.index.coherence);
-  Greenland.index.abruptness=cat(2,Greenland.index.abruptness,tmp.Greenland.index.abruptness);
-  Greenland.index.Padj=cat(2,Greenland.index.Padj,tmp.Greenland.index.Padj);
-  if length(tmp.Greenland.index.Padj_Na11)~=length(tmp.Greenland.index.Padj)
-    lst(end+1)=M;
+  if coh_int==0
+    Greenland.segments_length = cat(2,Greenland.segments_length, tmp.Greenland.segments_length);
+    Greenland.index.Latitude_mean=cat(2,Greenland.index.Latitude_mean,tmp.Greenland.index.Latitude_mean);
+    Greenland.index.Longitude_mean=cat(2,Greenland.index.Longitude_mean,tmp.Greenland.index.Longitude_mean);
+    Greenland.index.GPS_time_ave=cat(2,Greenland.index.GPS_time_ave,tmp.Greenland.index.GPS_time_ave);
+    Greenland.index.coherence=cat(2,Greenland.index.coherence,tmp.Greenland.index.coherence);
+    Greenland.index.abruptness=cat(2,Greenland.index.abruptness,tmp.Greenland.index.abruptness);
+    Greenland.index.Padj=cat(2,Greenland.index.Padj,tmp.Greenland.index.Padj);
+    if length(tmp.Greenland.index.Padj_Na11)~=length(tmp.Greenland.index.Padj)
+      lst(end+1)=M;
+    end
+    Greenland.index.Padj_Na11=cat(2,Greenland.index.Padj_Na11,tmp.Greenland.index.Padj_Na11);
   end
-  Greenland.index.Padj_Na11=cat(2,Greenland.index.Padj_Na11,tmp.Greenland.index.Padj_Na11);
-  
   
   if (length(Greenland.ice_bed_time)~=length(Greenland.ice_bed_power))
     keyboard
@@ -137,7 +171,7 @@ for M =1:15
   
 end
 Greenland.coh_int=coh_int;
-out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data_2010_coh_int.mat'];
+out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/verticalline_w_idx.mat'];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);

@@ -44,11 +44,11 @@ for M =1:35
   param.radar.fs = 195000000;
   if M<21
     cross_lines = 1;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/crossline',num2str(M)]);
+    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline',num2str(M)]);
   else
     M1=M-20;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/peterman/radar_w_index/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -66,15 +66,23 @@ for M =1:35
     figure(2); plot( lp(Greenland.ice_bed_power));
     grid on; title('Along Track vs Power')
     
-    if 0 
-      geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
+    if 1
+      %geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
+     % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/arctic/NaturalEarth_Data/Arctic_NaturalEarth.tif';
+      
+     % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/mzl7geo_90m_lzw.tif';
+      %$geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural_90m.tif';
+     % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/arctic/NaturalEarth_Data/Arctic_NaturalEarth.tif';
+      
+      geotiff_fn='/users/manjish/map1.tif';
+      
       proj = geotiffinfo(geotiff_fn);
       %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
       
       [A CMAP R]= geotiffread(geotiff_fn);
       
       figure(100)
-      mapshow(rgb2gray(A),CMAP/1e3);
+      mapshow((A),CMAP/1e3);
       xlabel('X (km)');
       ylabel('Y (km)');
       %xlim([350 650]);
@@ -144,6 +152,7 @@ for M =1:35
   end
 
   if range(relative_ice_bed_power_G_r_corrected)>102
+    disp(range(relative_ice_bed_power_G_r_corrected))
     keyboard
   end
   

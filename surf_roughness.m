@@ -36,7 +36,7 @@ file_exist = false;
     
    
     if ~file_exist || settings.rerun==1
-      settings.save_en=1;
+     
       [r]=roughness_calculation(Greenland,settings);
     end
       k = 1;
@@ -65,11 +65,11 @@ file_exist = false;
           else
             Greenland.ice_bed_power_avg(k) = nan;
             Greenland.depth_avg(k) = nan;
-            Greenland.Latitude_avg(k) = nan;
-            Greenland.Longitude_avg(k) = nan;
-            Greenland.along_track_avg(k) = nan;
+            Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
+            Greenland.Longitude_avg(k) =  nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));
+            Greenland.along_track_avg(k) =  nanmedian(geodetic_to_along_track(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)),Greenland.Longitude((l-num_int/2+1):(l+num_int/2))));
             Greenland.geometric_loss_avg(k) = nan;
-            Greenland.maxroll(k)=nan;
+            Greenland.maxroll(k)=max(Greenland.roll((l-num_int/2+1):(l+num_int/2)));
 
             orig_avg_power(k)=nan;
           end

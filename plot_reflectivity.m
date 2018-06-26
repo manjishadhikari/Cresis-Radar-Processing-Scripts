@@ -1,9 +1,9 @@
 
 
 
-settings.location='Jacobshavn';
+settings.location='Peterman';
 
-load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity_median_att3.mat'])
+load(['/cresis/snfs1/scratch/manjish/new_peterman/reflectivity_median_att2_new.mat'])
 
 
 if 1
@@ -18,7 +18,10 @@ if 1
   %   relative_reflectivty_using_constant_attn = relative_ice_bed_power_G_r_corrected + constant_attenuation ;
   %   relative_reflectivty_using_variable_attn = relative_ice_bed_power_G_r_corrected + variable_attenuation ;
   
-  geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
+  %geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Jakobshavn/10300100069AA400_ortho_11b.tif';
+  %geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/plummer_jakobshavn/jak_grid.tif';
+  geotiff_fn='/users/manjish/maps/peterman2.tif';
+  %geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
   proj = geotiffinfo(geotiff_fn);
   %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
   
@@ -27,7 +30,8 @@ if 1
   %% Reflectivity using constant na
   
   figure(1)
-  mapshow(rgb2gray(A),CMAP/1e3);
+%  mapshow(rgb2gray(A),CMAP/1e3);
+plot_geotiff(geotiff_fn);
   xlabel('X (km)');
   ylabel('Y (km)');
   if  strcmp(settings.location,'Peterman')
@@ -46,7 +50,7 @@ if 1
   gps.y = gps.y / 1000;
   hold on;
   
-  scatter(gps.x,gps.y,20,out.Refl_const,'fill')
+  scatter(gps.x,gps.y,20,out.Refl_var,'fill')
   caxis([-15 15])
   colorbar;
   title('Reflectivity using constant na with att method 3')
@@ -54,17 +58,17 @@ if 1
 
     
   if strcmp(settings.location,'Peterman')
-    save_path=['/cresis/snfs1/scratch/manjish/new_peterman/const_reflectivity_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_reflectivity_median_att3_joughin'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/const_reflectivity_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/reults/var_reflectivity_jacbed_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
     
     mkdir(save_dir);
   end
-  saveas(figure(1),save_path,'jpg')
-  
+ saveas(figure(2),save_path,'jpg')
+ % geotiffwrite(save_path,A,R);
   
   
   %Histogram
@@ -74,7 +78,7 @@ if 1
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/const_reflectivity_hist'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/const_reflectivity_hist'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/const_reflectivity_hist'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -111,7 +115,7 @@ if 1
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_reflectivity_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/var_reflectivity_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/var_reflectivity_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -153,7 +157,7 @@ if 1
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/const_att_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/const_att_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/const_att_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -189,7 +193,7 @@ if 1
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_att_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/var_att_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/var_att_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -199,22 +203,40 @@ if 1
   saveas(figure(6),save_path,'jpg')
   
   %% Plot Value of DN
-  %   figure(7)
-  %   mapshow(rgb2gray(A),CMAP/1e3);
-  %   xlabel('X (km)');
-  %   ylabel('Y (km)');
-  %   %xlim([350 650]);
-  %   %ylim([-1000 -600]);
-  %
-  %   hold on
-  %   clear gps.x gps.y
-  %   [gps.x,gps.y] = projfwd(proj,lat_G_r_corrected,lon_G_r_corrected);
-  %   gps.x = gps.x / 1000;
-  %   gps.y = gps.y / 1000;
-  %   hold on;
-  %
-  %   scatter(gps.x,gps.y,20,estimated_DN,'fill')
-  %   %caxis([-15 15])
-  %   colorbar;
-  %   title('Value of DN ')
+    figure(7)
+    mapshow(rgb2gray(A),CMAP/1e3);
+    xlabel('X (km)');
+    ylabel('Y (km)');
+   if  strcmp(settings.location,'Peterman')
+    xlim([-350 -50]);
+    ylim([-1250 -900]);
+  else
+  xlim([-250 -50]);
+    ylim([-2400 -2160]);
+  end
+  
+    hold on
+    clear gps.x gps.y
+    [gps.x,gps.y] = projfwd(proj,out.Latitude,out.Longitude);
+    gps.x = gps.x / 1000;
+    gps.y = gps.y / 1000;
+    hold on;
+  
+    scatter(gps.x,gps.y,20,out.modified_Na,'fill')
+    %caxis([-15 15])
+    colorbar;
+    title('Modified Na ')
+    
+   if strcmp(settings.location,'Peterman')
+    save_path=['/cresis/snfs1/scratch/manjish/new_peterman/mod_Na_median_att3'];
+  else
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/mod_Na_median_att3'];
+  end
+  [save_dir] =fileparts(save_path);
+  if ~exist(save_dir,'dir')
+    
+    mkdir(save_dir);
+  end
+  saveas(figure(7),save_path,'jpg') 
+    
 end

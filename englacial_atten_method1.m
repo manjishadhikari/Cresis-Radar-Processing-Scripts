@@ -6,12 +6,23 @@ dbstop error
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-  out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data_2010_coh_int.mat'];
+  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/verticalline_w_idx.mat'];
   load(out_fn);
 end
 physical_constants
 plots =1;
 
+%Roll Criteria
+ Greenland.roll=Greenland.Roll*180/pi;
+ idx= Greenland.roll>5;
+ Greenland.ice_bed_power(idx)=nan;
+
+ %Depth Criteria
+ Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
+ clear idx
+ Greenland.ice_bed_power((Greenland.depth<500))=nan;
+ 
+ %Coherent Integration
 numofCohInt=0;
 if numofCohInt~=0
       [Greenland]=coh_integration(Greenland,numofCohInt);
@@ -108,6 +119,8 @@ end
 median_power = lp(median(Greenland.ice_bed_power_cgl_sorted))  %6.3224 dB
 mean_power=lp(mean(Greenland.ice_bed_power_cgl_sorted))
 max_power=max(lp(Greenland.ice_bed_power_cgl_sorted))
+min_power=min(lp(Greenland.ice_bed_power_cgl_sorted))
+dynamic_range=max_power-min_power
 avg_depth = mean(Greenland.depth_sorted)     %1.6033 km
 
 

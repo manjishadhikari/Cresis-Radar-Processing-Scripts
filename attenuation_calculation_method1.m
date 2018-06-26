@@ -22,7 +22,7 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
           continue;
         else
           
-          Na = -25:0.05:25;    %Least Mean Square Error Method
+          Na = 0.01:0.05:30;    %Least Mean Square Error Method
           
           for  j = 1:length(Na)
             %         plot(-relative_ice_bed_power_G_r_corrected, '*')% apparent attenuation
@@ -36,7 +36,10 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
           [~, index] = min(mse);
           Na_bar  = Na(index);
          
-          
+          if 0
+          figure;plot(power_filtered_long(id));
+          hold on; plot(-2*Na_bar*(Greenland.depth_avg_filt(id)-Greenland.relative_depth));
+          end
           %test
 %           [r,Na_bar2,b]=regression(-2*(Greenland.depth_avg(id)-Greenland.relative_depth),power_filtered_long(id));
 %           if 0
@@ -48,7 +51,7 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
         %   Na_bar=11;
       
       
-        dn = (0:0.01:25);   %Filter before finding DN????
+        dn = (-30:0.01:30);   %Filter before finding DN????
         for j = 1:length(dn)
           
           term_1 = 2*dn(j).*((Greenland.depth_avg_filt(id)-Greenland.relative_depth)).*((along_track(id)-mean(along_track(id))));
