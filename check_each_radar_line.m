@@ -19,7 +19,7 @@ close all
 clc
 dbstop error
 
-plots =1;
+plots =0;
 coh_int=0;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
@@ -36,19 +36,19 @@ all_GR=[];
 
 %%
 disp('Englacial Attn Method 2')
-for M =1:35
+for M =1:76
   
   clearvars -except all_GR M range_power coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
   clc
   
   param.radar.fs = 195000000;
-  if M<21
+  if M<26
     cross_lines = 1;
-    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/crossline',num2str(M)]);
+    load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/crossline',num2str(M)]);
   else
     M1=M-20;
     cross_lines = 0;
-    load(['/cresis/snfs1/scratch/manjish/jacobshavn/radar_w_index/verticalline',num2str(M1)]);
+    load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/verticalline',num2str(M1)]);
   end
   physical_constants
   %%
@@ -66,15 +66,15 @@ for M =1:35
     figure(2); plot( lp(Greenland.ice_bed_power));
     grid on; title('Along Track vs Power')
     
-    if 1
+    if 0
       %geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
      % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/arctic/NaturalEarth_Data/Arctic_NaturalEarth.tif';
       
      % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/mzl7geo_90m_lzw.tif';
-      %$geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural_90m.tif';
-     % geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/arctic/NaturalEarth_Data/Arctic_NaturalEarth.tif';
+      geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural_90m.tif';
+      %geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/arctic/NaturalEarth_Data/Arctic_NaturalEarth.tif';
       
-      geotiff_fn='/users/manjish/map1.tif';
+     % geotiff_fn='/users/manjish/maps/map1.tif';
       
       proj = geotiffinfo(geotiff_fn);
       %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');

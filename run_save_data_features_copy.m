@@ -22,8 +22,8 @@ end
 %=======ENTER LINE NUMBER TO PROCESS=============
 param_override.location={'Peterman'};    %Peterman or Jacobshavn
 param_override.save_fig_only=0;        %Set to 1 to save figure only; 0 to save data features
-param_override.cross_lines_en=1;  %1 for cross line 1 for verticallines 0
-param_override.lines=[21:29];    %eg {1:36 jacob vl   1:25 cl) { Peterman==> {1:29} crossline and {1:20}vertical}
+param_override.cross_lines_en=0;  %1 for cross line 1 for verticallines 0
+param_override.lines=[1:20];    %eg {1:36 jacob vl   1:25 cl) { Peterman==> {1:29} crossline and {1:20}vertical}
 
 %==================================================
 

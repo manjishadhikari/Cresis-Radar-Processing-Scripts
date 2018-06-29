@@ -6,7 +6,7 @@ function [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_
     
       Na= Na_bar;
        
-      dn = (-25:0.01:25);   %Filter before finding DN????
+      dn = (-5:0.0001:5);   %Filter before finding DN????
       for j = 1:length(dn)
         
         term_1 = 2*dn(j).*((Greenland.depth_avg_filt-Greenland.relative_depth)).*((along_track-mean(along_track)));

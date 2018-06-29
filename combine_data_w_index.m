@@ -30,17 +30,17 @@ Greenland.Roll=[];
 Greenland.index.Padj_Na11=[];
 lst=[];
 fprintf('Combining all radar lines..\n')
-Lines=[1:33 1:40];
+Lines=[1:25 1:49];
 
 
 
-for M =34:73
+for M =1:74
   L=Lines(M);
-  if M<34
-    tmp=load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline', sprintf('%d.mat',L)]);
+  if M<26
+    tmp=load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/crossline', sprintf('%d.mat',L)]);
   else
     % N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline', sprintf('%d.mat',L)]);
+    tmp= load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/verticalline', sprintf('%d.mat',L)]);
   end
   
   if debug_flag
@@ -171,10 +171,10 @@ for M =34:73
   
 end
 Greenland.coh_int=coh_int;
-out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/verticalline_w_idx.mat'];
+out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/combined_data_new.mat'];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);
 end
-save(out_fn,'Greenland');
+save(out_fn,'Greenland','-v7.3');
 disp('==Done==')

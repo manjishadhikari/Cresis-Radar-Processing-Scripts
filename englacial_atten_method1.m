@@ -6,7 +6,7 @@ dbstop error
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/verticalline_w_idx.mat'];
+  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/combined_data_new.mat'];
   load(out_fn);
 end
 physical_constants

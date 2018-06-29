@@ -1,9 +1,9 @@
 
 
 
-settings.location='Peterman';
+settings.location='Jacobshavn';
 
-load(['/cresis/snfs1/scratch/manjish/new_peterman/reflectivity_median_att2_new.mat'])
+load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/result/reflectivity_median_att2.mat'])
 
 
 if 1
@@ -20,8 +20,8 @@ if 1
   
   %geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/Jakobshavn/10300100069AA400_ortho_11b.tif';
   %geotiff_fn='/cresis/snfs1/dataproducts/GIS_data/greenland/plummer_jakobshavn/jak_grid.tif';
-  geotiff_fn='/users/manjish/maps/peterman2.tif';
-  %geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
+  %geotiff_fn='/users/manjish/maps/peterman2.tif';
+  geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
   proj = geotiffinfo(geotiff_fn);
   %proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
   
@@ -29,18 +29,17 @@ if 1
   
   %% Reflectivity using constant na
   
-  figure(1)
-%  mapshow(rgb2gray(A),CMAP/1e3);
-plot_geotiff(geotiff_fn);
+
+  mapshow(rgb2gray(A),CMAP/1e3);
+%plot_geotiff(geotiff_fn);
   xlabel('X (km)');
   ylabel('Y (km)');
   if  strcmp(settings.location,'Peterman')
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
- xlim([-250 -50]);
-    ylim([-2400 -2160]); 
-  end
+ xlim([-250 150]);
+    ylim([-2450 -2100]);  end
   
   hold on
   clear gps.x gps.y
@@ -48,6 +47,7 @@ plot_geotiff(geotiff_fn);
   
   gps.x = gps.x / 1000;
   gps.y = gps.y / 1000;
+  figure(1)
   hold on;
   
   scatter(gps.x,gps.y,20,out.Refl_var,'fill')
@@ -60,7 +60,7 @@ plot_geotiff(geotiff_fn);
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_reflectivity_median_att3_joughin'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/reults/var_reflectivity_jacbed_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/var_reflectivity_jacbed_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -78,7 +78,7 @@ plot_geotiff(geotiff_fn);
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/const_reflectivity_hist'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/const_reflectivity_hist'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/const_reflectivity_hist'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -96,8 +96,8 @@ plot_geotiff(geotiff_fn);
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
-    xlim([-250 -50]);
-    ylim([-2400 -2160]);
+  xlim([-250 150]);
+    ylim([-2450 -2100]);
   end
   hold on
   clear gps.x gps.y
@@ -115,7 +115,7 @@ plot_geotiff(geotiff_fn);
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_reflectivity_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/var_reflectivity_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/var_reflectivity_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -139,8 +139,8 @@ plot_geotiff(geotiff_fn);
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
-   xlim([-250 -50]);
-    ylim([-2400 -2160]);
+  xlim([-250 150]);
+    ylim([-2450 -2100]);
   end
   hold on
   clear gps.x gps.y
@@ -157,7 +157,7 @@ plot_geotiff(geotiff_fn);
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/const_att_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/const_att_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/const_att_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -175,9 +175,8 @@ plot_geotiff(geotiff_fn);
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
-  xlim([-250 -50]);
-    ylim([-2400 -2160]);
-  end
+ xlim([-250 150]);
+    ylim([-2450 -2100]);  end
   hold on
   clear gps.x gps.y
   [gps.x,gps.y] = projfwd(proj,out.Latitude,out.Longitude);
@@ -193,7 +192,7 @@ plot_geotiff(geotiff_fn);
   if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/var_att_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/var_att_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/var_att_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')
@@ -211,8 +210,8 @@ plot_geotiff(geotiff_fn);
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
-  xlim([-250 -50]);
-    ylim([-2400 -2160]);
+ xlim([-250 150]);
+    ylim([-2450 -2100]);
   end
   
     hold on
@@ -230,7 +229,7 @@ plot_geotiff(geotiff_fn);
    if strcmp(settings.location,'Peterman')
     save_path=['/cresis/snfs1/scratch/manjish/new_peterman/mod_Na_median_att3'];
   else
-    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/results/mod_Na_median_att3'];
+    save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/results/mod_Na_median_att3'];
   end
   [save_dir] =fileparts(save_path);
   if ~exist(save_dir,'dir')

@@ -31,7 +31,7 @@ Latitude_avg =[];
 
 %%
 
-for M = 1:40
+for M = 1
   
  
   if strcmp(settings.location,'Jacobshavn')
