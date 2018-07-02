@@ -28,6 +28,11 @@ if numofCohInt~=0
       Greenlandout.ice_bed_elevation(i)=nanmean(Greenland.ice_bed_elevation(idx1:idx2));
     end
     
+     if isfield(Greenland,'settings')
+      Greenlandout.settings=Greenland.settings;
+    end
+    
+    
     Greenlandout.Latitude(i)=nanmean(Greenland.Latitude(idx1:idx2));
     Greenlandout.Longitude(i)=nanmean(Greenland.Longitude(idx1:idx2));
     Greenlandout.Elevation(i)=nanmean(Greenland.Elevation(idx1:idx2));

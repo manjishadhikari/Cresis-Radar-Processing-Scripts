@@ -7,9 +7,10 @@ function [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_
     if 1
       along_track = geodetic_to_along_track(Greenland.Latitude_avg_filt,Greenland.Longitude_avg_filt);
       along_track = along_track/1000;
+      
   
-     
       estimated_na = zeros(size(along_track));
+      
       for i = 1:ceil(max(along_track))
         clear id
         if i ==1

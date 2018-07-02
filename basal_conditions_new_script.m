@@ -55,7 +55,7 @@ dbstop if error
 settings.location={'Peterman'};
 
 
-plots =1;
+plots =0;
 numofCohInt=0;
 ice_bed_power_G_r_corrected = [];
 lat_G_r_corrected = [];
@@ -104,7 +104,7 @@ elseif strcmp(settings.location,'Peterman')
  mean_power =-46.2754;
    median_power =-60.1428;
    max_power =   -8.37;
-   avg_depth =1.5456e+03;
+   avg_depth =1.5455e+03;
    Na_reg = 8.129;
    Na_bar =8.1;
   num_of_lines=35;
@@ -113,7 +113,7 @@ end
 
 disp('Englacial Attn Method 2')
 for iter=1
-  for M =9
+  for M =21:num_of_lines
     
     % clearvars -except M   Ice_bed_elevation coh_int plots ice_bed_power_G_r_corrected lat_G_r_corrected lon_G_r_corrected depth_G_r_corrected cross_lines constant_attenuation estimated_Na estimated_DN variable_attenuation
     clc
@@ -133,11 +133,13 @@ for iter=1
       if M<21
         cross_lines = 1;
         if M<7
-          Na_bar=10.15;
-          median_power=-62;
+          Na_bar=9.6671;
+          median_power=-54;
+          avg_depth=1.3258e3;
         else
-          median_power=-63;
-          Na_bar=8.55;
+          median_power=-58.55;
+          Na_bar=9.15;
+          avg_depth=1.6638e3;
         end
         
         
@@ -146,12 +148,14 @@ for iter=1
       else
         M1=M-20;
         if M1<8
-          Na_bar=10.15;
-          median_power=-62;
+          Na_bar=9.6671;
+          median_power=-54;
+          avg_depth=1.3258e3;
   
         else
-          Na_bar=8.55;
-          median_power=-63;
+         median_power=-58.55;
+          Na_bar=9.15;
+          avg_depth=1.6638e3;
         end
         cross_lines = 0;
         load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline',num2str(M1)]);
@@ -175,7 +179,9 @@ for iter=1
       
       %% COHERENT INTEGRATIONS
     if numofCohInt~=0
-      [Greenland]=coh_integration(Greenland,numofCohInt);    
+    %  [Greenland1]=coh_integration(Greenland,numofCohInt); 
+        swindow=1;
+       [Greenland]=coh_integration_sliding_window(Greenland,numofCohInt,swindow);  
     end
     
     %%
@@ -247,7 +253,7 @@ for iter=1
     settings.M=M;
     settings.M1=M1;
     settings.rerun=1;
-    settings.save_en=1;
+    settings.save_en=0;
     % [Greenland,sf_rms]=surf_roughness(Greenland,num_int,repeat_after);
     [Greenland,sf_rms,sf_corr_power,orig_avg_power]=surf_roughness(Greenland,settings);
     
@@ -420,8 +426,8 @@ for iter=1
     
     %% Attenuation calculation
     %Method 1 fit Na and DN for evry 1 km
- %    out.att_method=1;
-  %   [Attenuation]=attenuation_calculation_method1(Greenland,power_filtered_long,power_filtered_short);
+  %   out.att_method=1;
+   %  [Attenuation]=attenuation_calculation_method1_10km(Greenland,power_filtered_long,power_filtered_short);
 %     
     %%Method 2 use Na from overall and fit DN for every line
     out.att_method=2;
@@ -675,6 +681,25 @@ end
 keyboard
 save_ref_en=0;
 if save_ref_en
+    
+  out.Latitude=lat_G_r_corrected;
+  out.Longitude=lon_G_r_corrected;
+  out.const_attenuation=constant_attenuation;
+  out.var_attenuation=variable_attenuation;
+  out.Depth=depth_G_r_corrected;
+  out.Refl_const=c_ref;
+  out.Refl_var=v_ref;
+  out.line_no=line_no;
+  out.estimated_Na=estimated_Na;
+  out.estimated_DN=estimated_DN;
+    out.modified_Na=modified_Na;
+    out.settings=settings;
   
+  
+  if strcmp(settings.location,'Peterman')
+    save(['/cresis/snfs1/scratch/manjish/new_peterman/results/reflectivity_med_att2.mat'],'out')
+  else
+    save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/reflectivity_200m_med_att2_new.mat'],'out')
+  end
   
 end

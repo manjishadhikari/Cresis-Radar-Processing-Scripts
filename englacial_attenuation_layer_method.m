@@ -3,7 +3,7 @@ close all
 clearvars
 
 debug_flag=1;
-frms=[24]; %21:236
+frms=[24]; %21:26
 att_val_bott=[];
 lat=[];
 lon=[];
@@ -231,11 +231,11 @@ end
 %att_val_bott_filt=sgolayfilt(att_val_bott,3,1001);
 % figure;plot(lat,att_val_bott);
 % figure;plot(lon,att_val_bott_filt);
- figure;plot(lat,Na);title('Na')
+ figure;plot(lat,Na-nanmean(Na));title('Na')
 
 
 load('/cresis/snfs1/scratch/manjish/new_peterman/reflectivity/crossline10.mat');
-
+hold on; plot(out.Latitude,out.modified_Na);
 figure;plot(out.Latitude,out.const_attenuation)
 nanidx=find(isnan(out.Longitude));
 out.const_attenuation(nanidx)=[];

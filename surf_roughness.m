@@ -78,6 +78,7 @@ file_exist = false;
             continue
           end
           if isnan(r.rms_height(k))
+            Greenland.ice_bed_power_avg(k) =nan;
             k= k+1;
             continue;
           else

@@ -3,24 +3,31 @@ close all
 clc
 dbstop error
 
+%% Plotting on map
+geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
+proj = geotiffinfo(geotiff_fn);
+%proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
+
+[A CMAP R]= geotiffread(geotiff_fn);
+
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/combined_data_new.mat'];
+  out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data/data_2011.mat'];
   load(out_fn);
 end
 physical_constants
 plots =1;
 
 %Roll Criteria
- Greenland.roll=Greenland.Roll*180/pi;
- idx= Greenland.roll>5;
- Greenland.ice_bed_power(idx)=nan;
+%  Greenland.roll=Greenland.Roll*180/pi;
+%  idx= Greenland.roll>5;
+%  Greenland.ice_bed_power(idx)=nan;
 
  %Depth Criteria
- Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
- clear idx
- Greenland.ice_bed_power((Greenland.depth<500))=nan;
+%  Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
+%  clear idx
+%  Greenland.ice_bed_power((Greenland.depth<500))=nan;
  
  %Coherent Integration
 numofCohInt=0;
@@ -184,12 +191,7 @@ ice_bed_refl_10=ice_bed_refl_10dB;
  ice_bed_refl_15=ice_bed_refl_15dB;
  ice_bed_refl_20=ice_bed_refl_20dB;
 
-%% Plotting on map
-geotiff_fn = '/cresis/snfs1/dataproducts/GIS_data/greenland/Landsat-7/Greenland_natural.tif';
-proj = geotiffinfo(geotiff_fn);
-%proj = geotiffinfo('X:\GIS_data\antarctica\Landsat-7\Antarctica_LIMA_480m.tif');
 
-[A CMAP R]= geotiffread(geotiff_fn);
 
 %% Reflectivity using constant na
 
@@ -214,7 +216,7 @@ caxis([-15 15])
 colorbar;
 c=colorbar;
 c.Label.String='Reflectivity';
-title('Reflectivity using constant na  9.7 dB/km')
+title('Reflectivity using constant na ')
 
 %5dB
 figure(102)
@@ -368,5 +370,24 @@ c=colorbar;
 c.Label.String='value';
 title('Abruptive Index ')
 
-
+%Adjusted Intensity
+figure(109)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,Greenland.index.Latitude_mean,Greenland.index.Longitude_mean);
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+scatter(gps.x,gps.y,20,Greenland.index.Padj,'s','fill')
+%caxis([min(Greenland.index.abruptness) max(Greenland.index.abruptness)])
+%caxis([0.1 0.3])
+colorbar;
+c=colorbar;
+c.Label.String='value';
+title('Adjusted Intensity ')
 
