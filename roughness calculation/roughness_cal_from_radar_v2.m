@@ -35,7 +35,7 @@ if 0
 end
 
 if ~exist('geom_correction','var')
-  geom_correction=0;
+  geom_correction=1;
 end
 
 if ~exist('coh_int_true','var')

@@ -39,12 +39,15 @@ file_exist = false;
      
       [r]=roughness_calculation(Greenland,settings);
     end
+    
+    %% ROughness Correction
       k = 1;
-      
+       sf_corr_power=nan*ones(1,length(r.lat));
       num_int=r.num_int;  % ~210 metres
       repeat_after=r.repeat_after;
       for l = num_int/2:repeat_after:length(Greenland.ice_surface_power)
         if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_surface_power)))
+          
           
           if any(~isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))))
             ice_bed_power = Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2));
@@ -52,8 +55,12 @@ file_exist = false;
             clear id
             id = find(isnan(Greenland.ice_bed_power((l-num_int/2+1):(l+num_int/2))));
             ice_bed_power(id) = [];
+
             depth(id) = [];
             Greenland.ice_bed_power_avg(k) =   nanmean(ice_bed_power) ;
+            if length(id)>num_int/2
+                Greenland.ice_bed_power_avg(k) =nan;
+            end
             Greenland.depth_avg(k) = nanmean(depth);
             Greenland.Latitude_avg(k) = nanmean(Greenland.Latitude((l-num_int/2+1):(l+num_int/2)));
             Greenland.Longitude_avg(k) = nanmean(Greenland.Longitude((l-num_int/2+1):(l+num_int/2)));

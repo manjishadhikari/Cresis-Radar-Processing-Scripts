@@ -11,7 +11,7 @@ cross_lines=settings.cross_lines;
 if strcmp(settings.type,'surface')
   power=Greenland.ice_surface_power;
 else
-  power=Greenland.ice_bed_power_avg;
+  power=Greenland.ice_bed_power;
 end
 
 
@@ -224,9 +224,9 @@ if settings.save_en
   elseif strcmp(settings.location,'Jacobshavn')
     if strcmp(settings.type,'surface')
       if cross_lines
-        save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
+        save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/crossline' num2str(M,'%d') '.mat'],'r');
       else
-        save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/surface_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
+        save(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline' num2str(M1,'%d') '.mat'],'r');
       end
     elseif strcmp(settings.type,'bed')
       if cross_lines

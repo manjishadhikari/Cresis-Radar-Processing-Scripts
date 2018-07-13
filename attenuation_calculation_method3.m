@@ -3,20 +3,23 @@ function [Attenuation]=attenuation_calculation_method3(Greenland,power_filtered_
 
 %% Attenuation calculation
     
-    %Method  DN for evry 1 km and take Na from overall
+    %Method  DN for evry 10 km and take Na from overall
     if 1
       along_track = geodetic_to_along_track(Greenland.Latitude_avg_filt,Greenland.Longitude_avg_filt);
       along_track = along_track/1000;
   
-     
+      dst=floor(along_track(end)/10);
+      
       estimated_na = zeros(size(along_track));
-      for i = 1:ceil(max(along_track))
+      for i = 1:dst
         clear id
         if i ==1
-          id = find((along_track > 0) & (along_track <= i))  ;
-          
+          id = find((along_track > 0) & (along_track <= 10))  ;
+        elseif i==dst
+ 
+            id=find((along_track > 10*(i-1)) & (along_track <= along_track(end)));
         else
-          id = find((along_track > i-1) & (along_track <= i))  ; %Every 1 km
+          id = find((along_track > 10*(i-1)) & (along_track <= 10*i))  ; %Every 1 km
         end
         if length(id) < 1
           continue;
@@ -68,18 +71,7 @@ function [Attenuation]=attenuation_calculation_method3(Greenland,power_filtered_
         estimated_dn(id)=DN;
         
         var_attenuation(id)=const_attenuation(id)+ 2*DN.*((Greenland.depth_avg_filt(id)-Greenland.relative_depth)).*((along_track(id)-mean(along_track(id))));
-        %     else
-        %       modified_atteanuation(id) = 2.*constant_attenuation.*(Greenland.depth_avg(id)-relative_depth);
-        %       estimated_na(id) = constant_attenuation;
-        %
-        %     end
-        %     plot(-relative_ice_bed_power_G_r_corrected(id))
-        %     hold on
-        %     plot(2.*variable_attenuation_scale*Greenland.attenuation_constant(id).*(Greenland.depth_avg(id)-relative_depth))
-        %     hold on
-        %     plot(2.*constant_attenuation.*(Greenland.depth_avg(id)-relative_depth))
-        %     grid
-        
+       
       end
     end
     Attenuation.const_attenuation=const_attenuation;

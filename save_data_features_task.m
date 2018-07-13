@@ -107,7 +107,7 @@ for k =param.proc_line
         param1 = read_param_xls(ct_filename_param_v2(param,'rds_param_2011_Greenland_P3.xls'),Day_seg{k});
         param=mergestruct(param,param1);
         gps_fn = ct_filename_support(param,'','gps',1);
-        data_dir = ct_filename_out(param,'','CSARP_manjish');
+        data_dir = ct_filename_out(param,'','CSARP_manjish')
         layer_dir = ct_filename_out(param,'','CSARP_layerData');
         
       elseif (20<k & k<24)
@@ -352,8 +352,8 @@ for k =param.proc_line
           continue
         else
           
-          [bed_power, idx] = max(lp(data.Data(index_bt(i)-1:index_bt(i)+1,i)));
-          bed_index = idx + index_bt(i)-2;
+          [bed_power, idx] = max(lp(data.Data(index_bt(i)-5:index_bt(i)+5,i)));
+          bed_index = idx + index_bt(i)-6;
  
           idx1=bed_index+200;
           idx2=bed_index+500;
@@ -428,7 +428,7 @@ for k =param.proc_line
        
         else
           save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/images/',sprintf('crossline%d',k),'/',sprintf('Data_%s_%03d', param1.day_seg, frm)];
-         save_path2=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('crossline%d',k),'/',sprintf('Data_%s_%03d_echo', param1.day_seg, frm)];
+         save_path2=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/images/',sprintf('crossline%d',k),'/',sprintf('Data_%s_%03d_echo', param1.day_seg, frm)];
        
         end
         [save_dir] =fileparts(save_path);
@@ -1156,8 +1156,8 @@ for k =param.proc_line
         ylim([-1250 -900]);
         
       else
-        xlim([-350 -50]);
-        ylim([-2450 -2150]);
+        xlim([-250 150]);
+        ylim([-2450 -2100]);
       end
       hold on
       clear gps.x gps.y
@@ -1177,7 +1177,7 @@ for k =param.proc_line
         if Peterman
           save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('crossline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
         else
-          save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/images/',sprintf('crossline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+          save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/images/',sprintf('crossline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
         end
         [save_dir] =fileparts(save_path);
         if ~exist(save_dir,'dir')
@@ -1189,7 +1189,7 @@ for k =param.proc_line
         if Peterman
           save_path=['/cresis/snfs1/scratch/manjish/peterman/images/',sprintf('verticalline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
         else
-          save_path=['/cresis/snfs1/scratch/manjish/jacobshavn/images/',sprintf('verticalline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
+          save_path=['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/images/',sprintf('verticalline%d',k),'/',sprintf('Location_Data_flpd_%s_%03d', param1.day_seg, frm)];
         end
         [save_dir] =fileparts(save_path);
         if ~exist(save_dir,'dir')

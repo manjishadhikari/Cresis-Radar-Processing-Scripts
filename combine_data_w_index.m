@@ -30,17 +30,17 @@ Greenland.Roll=[];
 Greenland.index.Padj_Na11=[];
 lst=[];
 fprintf('Combining all radar lines..\n')
-Lines=[7:20 8:15];
+Lines=[67:74 92:103];
 
 
 
-for M =1:22
+for M =1:20
   L=Lines(M);
-  if M<15
-    tmp=load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/crossline', sprintf('%d.mat',L)]);
+  if M<9
+    tmp=load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/crossline', sprintf('%d.mat',L)]);
   else
     % N=M-20;
-    tmp= load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline', sprintf('%d.mat',L)]);
+    tmp= load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/verticalline', sprintf('%d.mat',L)]);
   end
   
   if debug_flag
@@ -104,7 +104,7 @@ for M =1:22
   %   else
   %      N=M-20;
   %      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/surface_roughness/verticalline', sprintf('%d.mat',N)]);
-  %   end
+  %   end5
   %   % load(['/cresis/snfs1/scratch/santhosh/thesis/get heights frames Greenland/surface_roughness_v6_' num2str(k,'%03d') '.mat'])
   %   K  = floor(length(tmp.Greenland.ice_bed_power_cgl)/1000);
   %   for l = 1:K
@@ -172,7 +172,7 @@ for M =1:22
 end
 Greenland.coh_int=coh_int;
 Greenland.comb_Lines=Lines;
-out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data/data_2011.mat'];
+out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/data/data_2014.mat'];
 out_fn_dir=fileparts(out_fn);
 if ~exist(out_fn_dir,'dir')
   mkdir(out_fn_dir);

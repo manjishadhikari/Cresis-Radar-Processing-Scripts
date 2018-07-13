@@ -16,7 +16,19 @@ close
 clc
 dbstop error
 
-settings.location='Peterman';
+settings.location='Jacobshavn';
+
+
+if strcmp(settings.location,'Jacobshavn')
+  
+  num_of_lines=177;
+  cross_line_no=74;
+ 
+elseif strcmp(settings.location,'Peterman')
+  num_of_lines=35;
+  cross_line_no=20;
+end
+
 
 pw = 1000;     %Density of water
 g = 9.81;       %Gravity
@@ -31,26 +43,26 @@ Latitude_avg =[];
 
 %%
 
-for M = 1
+for M = 1:num_of_lines
   
  
   if strcmp(settings.location,'Jacobshavn')
-    if M<26
+    if M<=cross_line_no
     
       M1=0;
-      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/crossline',num2str(M)]);
+      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/crossline',num2str(M)]);
     else
-      M1=M-25;
-      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/radar_w_idx_new/verticalline',num2str(M1)]);
+      M1=M-cross_line_no;
+      load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/new_lines/verticalline',num2str(M1)]);
     end
     
   elseif strcmp(settings.location,'Peterman')
-    if M<21
+    if M<=cross_line_no
       cross_lines = 1;
       M1=0;
       load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/crossline',num2str(M)]);
     else
-      M1=M-20;
+      M1=M-cross_line_no;
       cross_lines = 0;
       load(['/cresis/snfs1/scratch/manjish/new_peterman/radar_w_idx_new/verticalline',num2str(M1)]);
     end
@@ -123,8 +135,8 @@ ylabel('Y (km)');
     xlim([-350 -50]);
     ylim([-1250 -900]);
   else
-  xlim([-250 -50]);
-    ylim([-2400 -2160]);
+    xlim([-250 150]);
+    ylim([-2450 -2100]);
   end
 
 
@@ -159,7 +171,7 @@ contour(x,y,interpolated)
 [fx fy] = gradient(interpolated);
 figure(1)
 hold on
-[cn, h] = contour(x,y,interpolated, 25)
+[cn, h] = contour(x,y,interpolated,100)
 % quiver(x,y,fx,fy)
 
 id = find(fx<0 | -fy<0);
@@ -167,4 +179,4 @@ fx(id) = nan;
 fy(id) = nan;
 figure (1)
 hold on
-quiver(x,y,fx,-fy,40)
+quiver(x,y,fx,-fy,100)

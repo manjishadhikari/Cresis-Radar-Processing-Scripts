@@ -6,18 +6,18 @@ M=settings.M;
 M1=settings.M1;
 physical_constants;
 param.radar.fc=195000000;
-er_bed=6;   %Set to 6 assuming rock 
+er_bed=6;   %Set to 6 assuming rock
 
 if settings.cross_lines==1
   if strcmp(settings.location,'Jacobshavn')
     if exist((  (['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/crossline',num2str(M),'.mat'])),'file')
       load(['/cresis/snfs1/scratch/manjish/new_jacobshavn/bed_roughness/crossline',num2str(M),'.mat']);
-      file_exist = true;
+       file_exist = true;
     end
   elseif strcmp(settings.location,'Peterman')
     if exist((  (['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/crossline',num2str(M),'.mat'])),'file')
       load(['/cresis/snfs1/scratch/manjish/new_peterman/bed_roughness/crossline',num2str(M),'.mat']);
-      file_exist = true;
+       file_exist = false;
     end
   end
   
@@ -36,34 +36,34 @@ else
 end
 
 %Bed roughness calculation
-settings.num_int=1000;
-settings.repeat_after=10;
-settings.type='bed';
-settings.save_en=0;
-[r]=roughness_calculation(Greenland,settings);
-
+if ~file_exist || settings.rerun==1
+  [r]=roughness_calculation(Greenland,settings);
+end
 %Bed roughness correction
+bed_corr_power=nan*ones(1,length(r.lat));
+
 k=1;
-num_int=r.num_int;
-repeat_after=r.repeat_after;
-for l = num_int/2:repeat_after:length(Greenland.ice_bed_power_avg)
-  if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_bed_power_avg)))
-    %         if k>size(r.lat)
-    %           continue
-    %         end
-    if isnan(r.rms_height(k)) || isnan(Greenland.ice_bed_power_avg(k))
-      Greenland.ice_bed_power_avg(k)=nan;
-      bed_corr_power(k)=nan;
-      k= k+1;
-      continue ;
-    else
-      
-      bed_corr_power(k) =(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fc*(sqrt(er_bed)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fc)*(sqrt(er_bed-1)))^2)/2))^2));
-      Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k).*(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fc*(sqrt(er_bed)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fc)*(sqrt(er_bed-1)))^2)/2))^2));
-      k = k+1;
-    end
+% num_int=r.num_int;
+% repeat_after=r.repeat_after;
+% for l = num_int/2:repeat_after:length(Greenland.ice_bed_power_avg)
+%   if ((l >= num_int/2) && ((l+num_int/2) < length(Greenland.ice_bed_power_avg)))
+%         if k>size(r.lat)
+%           continue
+%         end
+for l=1:length(r.lat)
+  if isnan(r.rms_height(k)) || isnan(Greenland.ice_bed_power_avg(k))
+    Greenland.ice_bed_power_avg(k)=nan;
+    bed_corr_power(k)=nan;
+    k= k+1;
+    continue ;
+  else
+    
+    bed_corr_power(k) =(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fc*(sqrt(er_bed)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fc)*(sqrt(er_bed-1)))^2)/2))^2));
+    Greenland.ice_bed_power_avg(k) = Greenland.ice_bed_power_avg(k).*(exp(-(4*pi*r.rms_height(k)/(c/(param.radar.fc*(sqrt(er_bed)-1))))^2)*(besseli(0,((4*pi*r.rms_height(k)/(c/(param.radar.fc)*(sqrt(er_bed-1)))^2)/2))^2));
+    k = k+1;
   end
 end
+
 bed_rms=r;
 clearvars r k
 

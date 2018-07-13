@@ -13,7 +13,7 @@ proj = geotiffinfo(geotiff_fn);
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-  out_fn=['/cresis/snfs1/scratch/manjish/new_peterman/data/data_2011.mat'];
+  out_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/data/combined_data.mat'];
   load(out_fn);
 end
 physical_constants
@@ -27,7 +27,7 @@ plots =1;
  %Depth Criteria
 %  Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
 %  clear idx
-%  Greenland.ice_bed_power((Greenland.depth<500))=nan;
+%  Greenland.ice_bed_power((Greenland.depth>500))=nan;
  
  %Coherent Integration
 numofCohInt=0;
@@ -142,9 +142,44 @@ Na_reg=m*1000
 xlabel('Relative Depth in m'); ylabel('Relative Ice Bed Power dB')
 title('Regression Fit')
 
+%%  Filtering data
+
+window_size = 10000;
+% Greenland.ice_bed_power_frgc = conv(Greenland.ice_bed_power_rgc,gausswin(window_size),'same');
+Greenland.ice_bed_power_frgl_sorted  = (sgolayfilt((lp((Greenland.ice_bed_power_rgl_sorted))), 2,window_size+1, gausswin(window_size+1)));
+%Greenland.ice_bed_power_frgl_sortedtst  = (sgolayfilt((lp((Greenland.ice_bed_power_rgl_sorted))), 2,window_size+1));
+
+if plots
+    figure;plot((1:length(Greenland.ice_bed_power_rgl_sorted)),lp(Greenland.ice_bed_power_rgl_sorted));
+    hold on
+    plot((1:length(Greenland.ice_bed_power_frgl_sorted)),(Greenland.ice_bed_power_frgl_sorted));
+    title('Filtering Data')
+end
+
+window_size = 10000;
+Greenland.depths_sorted  = sgolayfilt(Greenland.depth_sorted, 2,window_size+1, gausswin(window_size+1));
+if plots
+    figure;plot((1:length(Greenland.depth_sorted)),Greenland.depth_sorted);
+    hold on
+    plot((1:length(Greenland.depths_sorted)),(Greenland.depths_sorted));
+    title('Filtered Depth ')
+    
+    
+    figure
+    subplot(2,1,1)
+    plot((1:length(Greenland.depth_sorted)),(Greenland.depths_sorted-mean(Greenland.depths_sorted))/1e3);
+    subplot(2,1,2)
+    plot((1:length(Greenland.ice_bed_power_frgl_sorted)),(Greenland.ice_bed_power_frgl_sorted));
+   
+end
+
+%%
+
+
+
 Na = 1:0.05:25;    %Least Mean Square Error Method
 for  j = 1:length(Na)
-  mse(j) = mean((-lp(Greenland.ice_bed_power_rgl_sorted)- 2*Na(j)*(Greenland.depth_sorted-mean((Greenland.depth_sorted)))/1000).^2);
+  mse(j) = mean((-(Greenland.ice_bed_power_frgl_sorted)- 2*Na(j)*(Greenland.depth_sorted-mean((Greenland.depth_sorted)))/1000).^2);
 end
 figure;plot(mse);
 [~, index1] = min(mse);
@@ -390,4 +425,28 @@ colorbar;
 c=colorbar;
 c.Label.String='value';
 title('Adjusted Intensity ')
+
+
+
+%Depth
+figure(101)
+mapshow(rgb2gray(A),CMAP/1e3);
+xlabel('X (km)');
+ylabel('Y (km)');
+xlim([-350 -50]);
+ylim([-1250 -900]);
+
+hold on
+clear gps.x gps.y
+[gps.x,gps.y] = projfwd(proj,lat,lon);
+
+gps.x = gps.x / 1000;
+gps.y = gps.y / 1000;
+hold on;
+scatter(gps.x,gps.y,20,Greenland.depth,'s','fill')
+%caxis([-15 15])
+colorbar;
+c=colorbar;
+c.Label.String='Depth';
+title('Depth ')
 

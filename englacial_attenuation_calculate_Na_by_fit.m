@@ -10,7 +10,7 @@ dbstop error
 %% calculating Na avg
 % load(['C:\Users\s343m141\Documents\scripts\matlab\thesis\ice_loss_estimation_paper_data\after_roughness_loss_correction\get heights frames Greenland\Greenland_layerdata_selected_frames_complete_v6.mat'])
 if 1
-    in_fn=['/cresis/snfs1/scratch/manjish/new_peterman/combined_data.mat'];
+    in_fn=['/cresis/snfs1/scratch/manjish/new_jacobshavn/data/combined_data.mat'];
     load(in_fn);
 end
 physical_constants
@@ -40,7 +40,7 @@ clear idx
 
 Greenland.depth = (Greenland.ice_bed_time - Greenland.surface_time)*c/2/sqrt(er_ice);
 Greenland.surface_height = (Greenland.surface_time)*c/2;
-
+Greenland.ice_bed_power=abs(Greenland.ice_bed_power).^2;
 
 if plots
     plot(Greenland.depth, lp((Greenland.ice_bed_power)));

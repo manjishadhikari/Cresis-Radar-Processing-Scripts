@@ -13,12 +13,12 @@ function [Attenuation]=attenuation_calculation_method2(Greenland,power_filtered_
         term_2 = 2*Na*((Greenland.depth_avg_filt-Greenland.relative_depth));
         S(j) = mean(((power_filtered_short)+term_1+term_2).^2);
         
-%         if j > 1
-%           if S(j-1)<S(j)
-%             DN = dn(j-1);
-%             break
-%           end
-%         end
+        if j > 1
+          if S(j-1)<S(j)
+            DN = dn(j-1);
+            break
+          end
+        end
       end
       
       if 0

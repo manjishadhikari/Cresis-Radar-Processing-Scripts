@@ -17,10 +17,10 @@ if 1
   sgolay_filter_length=0;
   direction=1;
   cross_line=1;
-     datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_manjish','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
-    layer{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_layerData','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
+  datapath{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_manjish','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
+  layer{1}=(fullfile(base_path_dp,'ct_data','rds','2014_Antarctica_DC8','CSARP_layerData','20141026_06',[sprintf('Data_20141026_06_%03d.mat',lno)]));
   %
- % datapath{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_ant_qlook\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
+  % datapath{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_ant_qlook\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
   %layer{1}=(['X:\ct_data\rds\2011_Antarctica_TO\CSARP_layerData\20111213_04\Data_20111213_04_',sprintf('%03d',lno)]);
   % num_int=600;
   coh_int_true=0;
@@ -29,8 +29,8 @@ if 1
   sf_bin=[0 0];
   save_en=0;
   debug_flag=0;
-  geom_correction=0;
-  int_samples=[300 600 1000 1500 2000];
+  geom_correction=1;
+  int_samples=[200 400 600 800 1000 5000];
   
 end
 
@@ -96,11 +96,11 @@ for K = 1:length(datapath)
     %        surface_twtt_tmp=nan*ones(1,Nx);
     
     for i= 1:(length(tmp_data.GPS_time)-coh_int)
-     % idx1=(i-1)*coh_int+1;
+      % idx1=(i-1)*coh_int+1;
       %idx2=i*coh_int;
       idx1=i;
       idx2=i+coh_int-1;
-     
+      
       if idx2>length(tmp_data.GPS_time) & length(tmp_data.GPS_time)-idx1>coh_int/2
         idx2=length(tmp_data.GPS_time);
       elseif idx2>length(tmp_data.GPS_time)& length(tmp_data.GPS_time)-idx1<coh_int/2
@@ -114,9 +114,9 @@ for K = 1:length(datapath)
       data.Roll(i)=mean(tmp_data.Roll(idx1:idx2));
       
       if coh_int_true
-      data.Data(:,i)=mean((tmp_data.Data(:,idx1:idx2)),2);
+        data.Data(:,i)=mean((tmp_data.Data(:,idx1:idx2)),2);
       elseif incoh_int_true
-      data.Data(:,i)=mean((abs(tmp_data.Data(:,idx1:idx2)).^2),2);           
+        data.Data(:,i)=mean((abs(tmp_data.Data(:,idx1:idx2)).^2),2);
       end
     end
     data.Time=tmp_data.Time;
@@ -172,7 +172,7 @@ for K = 1:length(datapath)
   clear index;
   dt= data.Time(2)-data.Time(1);
   %index = round((bottom_twtt-data.Time(1))/dt);
-   index=round(interp1(data.Time,1:size(data.Data,1),bottom_twtt,'linear','extrap'));
+  index=round(interp1(data.Time,1:size(data.Data,1),bottom_twtt,'linear','extrap'));
   ice_bed_power  = zeros(1,length(data.Surface));
   
   for i = 1:length(bottom_twtt)
@@ -333,13 +333,13 @@ for K = 1:length(datapath)
   
   
   %Parameter tuning
-
+  
   for int_sample=1:length(int_samples)
     
     num_int=int_samples(int_sample);
     %num_int=1000;
     
-    repeat_after=100;
+    repeat_after=500;
     disp(sprintf('Sampled distance : %d metres', round(dist(num_int))))
     disp(sprintf('repeat after distance : %d metres', round(dist(repeat_after+1))))
     
@@ -373,13 +373,13 @@ for K = 1:length(datapath)
           end
           %  s = sqrt(sqrt((ice_bed_power((l-500):(l+499))).*conj((ice_bed_power((l-500):(l+499))))));
           % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-        % if incoh_int_true==0
-         % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-         %else
-            s=sqrt(((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
-        % end
+          % if incoh_int_true==0
+          % s=(abs((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+          %else
+          s=sqrt(((ice_surface_power((l-num_int/2+1):(l+num_int/2)))));
+          % end
           
-        id = find(isnan(s)|isinf(s)|s==0);
+          id = find(isnan(s)|isinf(s)|s==0);
           if length(id) > num_int/2
             r.rms_height(k) = nan;
             r.dielectric_constant(k) = nan;
@@ -391,6 +391,7 @@ for K = 1:length(datapath)
             s(id) = [];
           end
           
+          r.num_samples_used(k)=length(s);
           % phat = mle(double(abs(s)),'distribution','Rician');
           % x = 0:0.0001:0.2;
           % histogram(abs(s))
@@ -415,7 +416,6 @@ for K = 1:length(datapath)
               % figure(125);hold on; plot(x,length(s)*max(s)/100*pdf(makedist('Rician','s',pd2.s,'sigma',pd2.sigma),x),'g');
               figure(125); hold on; plot(x,length(s)*max(s)/100*ricepdf(x,pd.s,pd.sigma),'r');
             end
-            
             
           catch ME
             warning('unable to fit the distribution')
@@ -492,7 +492,7 @@ for K = 1:length(datapath)
             end
           end
           
-         
+          
           if isnan(r.rms_height(k))
             k = k+1;
             continue;
@@ -526,17 +526,17 @@ for i=1:length(r_samp)
   figure(1);hold on; plot(r_samp{i}.rms_height*100);
 end
 
-    r=r_samp{4};
-   load([fullfile(base_path_sr,'manjish','2014_Antarctica_DC8','verticalline1.mat')]);
-     [lon_1, un_idx]=unique(icessn.lon);
-     laser_rmsfit=icessn.rms_fit(un_idx);
-   laser_rms=interp1(lon_1,laser_rmsfit,r.lon);
-   figure;plot(r.lon,laser_rms); hold on; plot(r.lon,r.rms_height*100);
+% r=r_samp{4};
+load([fullfile(base_path_sr,'manjish','2014_Antarctica_DC8','verticalline1.mat')]);
+[lon_1, un_idx]=unique(icessn.lon);
+laser_rmsfit=icessn.rms_fit(un_idx);
+laser_rms=interp1(lon_1,laser_rmsfit,r.lon);
+figure;plot(r.lon,laser_rms); hold on; plot(r.lon,r.rms_height*100);
 keyboard
 
 if save_en
   disp(sprintf('Saving radar surface roughness radarline_%s', num2str(lno)))
- % out_fn=['Y:\manjish\peterman\parametertuning\roughness_no_coh_int',num2str(lno)];
+  % out_fn=['Y:\manjish\peterman\parametertuning\roughness_no_coh_int',num2str(lno)];
   out_fn=['/cresis/snfs1/scratch/manjish/peterman/parametertuning/roughness_nocoh_geomcorr_int',num2str(lno)];
   
   out_fn_dir=fileparts(out_fn);
